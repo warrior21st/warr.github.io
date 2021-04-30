@@ -9,6 +9,10 @@ xhr.onreadystatechange=function(){
                 var text=arr[i]["name"];
                 var url=arr[i]["html_url"];
 
+                if(text.toLowerCase()=="readme.md"){
+                    continue;
+                }
+
                 html+="<li><a href='"+url+"' target='_blank'>"+text+"</a><li>";
             }
             html+="</ul>";
