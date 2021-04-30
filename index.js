@@ -13,7 +13,7 @@ xhr.onreadystatechange=function(){
                     continue;
                 }
 
-                html+="<li><a href='"+url+"' target='_blank'>"+text+"</a><li>";
+                html+="<li class='text-primary'><h5><a class='text-primary' href='"+url+"'>"+text+"</a></h5></li>";
             }
             html+="</ul>";
 
