@@ -17,7 +17,7 @@ xhr.onreadystatechange=function(){
             }
             html+="</ul>";
 
-            document.getElementById("blogs").innerHTML=html;
+            document.getElementById("notes").innerHTML=html;
         }
         else
         {
