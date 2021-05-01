@@ -25,5 +25,5 @@ xhr.onreadystatechange=function(){
         }
     }
 };
-xhr.open("GET","https://api.github.com/repos/warrior21st/blog/contents",true);
+xhr.open("GET","https://api.github.com/repos/warrior21st/blog/contents",false);
 xhr.send(null);
