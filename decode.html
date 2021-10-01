@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>decode</title>
+    <link rel="stylesheet" href="/libs/bootstrap.min.css" />
+</head>
+<body>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="input-group">
+                <label>connected address：</label>
+                <span id="connectedAddress">no address connected</span>
+            </div>
+            <div class="input-group">
+                <label>minted weapons：</label>
+                <span id="mintedWeapons">0</span>
+            </div>
+            <div class="input-group">                
+                <label class="input-group-addon">rpc endpoint：</label>
+                <input class="form-control" id="endpoint" value="https://data-seed-prebsc-1-s3.binance.org:8545/" style="width:50%" />
+            </div>
+            <div style="height:5px;"></div>
+            <div class="input-group">
+                <span class="input-group-addon">weapon nft address：</span>
+                <input class="form-control" id="weaponNftAddress" value="" style="width:50%" />
+            </div>
+            <div style="height:5px;"></div>
+            <div class="input-group">
+                <span class="input-group-addon">weapon store address：</span>
+                <input class="form-control" id="weaponStoreAddress" value="" style="width:50%" />
+            </div>
+            <div style="height:5px;"></div>
+            <div class="input-group">
+                <span class="input-group-addon">token id：</span>
+                <input class="form-control" id="tokenId" value="0" style="width:50%" />
+            </div>
+            <div>&nbsp;</div>
+            <textarea rows="10" style="width:95%" id="info"></textarea>
+            <div>
+                <button id="approve" class="btn btn-default" onclick="approveUsdt()">approve usdt</button>
+                &nbsp;&nbsp;&nbsp;
+                <button id="draw" class="btn btn-default" onclick="draw()">draw weapon</button>
+            </div>
+            <div>&nbsp;</div>
+            <div>
+                <button id="decode" class="btn btn-primary" onclick="decodeInfo()">decode</button>
+                &nbsp;&nbsp;&nbsp;
+                <button id="decodePrevID" class="btn btn-default" onclick="decodePrevId()">decode prev</button>
+                <button id="decodeNextID" class="btn btn-default" onclick="decodeNextId()">decode next</button>
+            </div>
+            <div>&nbsp;</div>
+            <img id="img" style="width:40%;height:30%" />
+            <div>&nbsp;</div>
+            <div>
+                <button id="approve_zoor" class="btn btn-primary" onclick="approveZooR()">approve zoor for staker</button>
+                <button id="approve_zbc" class="btn btn-primary" onclick="approveZbc()">approve zbc for staker</button>
+            </div>
+            
+        </div>
+    </div>
+</body>
+<script src="/libs/web3.min.js"></script>
+<script type="text/javascript">
+
+    var usdtAddress = "0x8C43FbebAA2dED5a50C10766b0F03a151f2bBf17";
+    var weaponNftAddress = "0xF2f90d03E2d41186eCb4Ca0eD20afa28383C465B";
+    var weaponStoreAddress = "0x9A9a1e63a38d006eBb0cC96448ee622A0789E48D";
+
+    document.getElementById("weaponNftAddress").value = weaponNftAddress;
+    document.getElementById("weaponStoreAddress").value = weaponStoreAddress;
+
+    if(!web3){
+        var endpoint = document.getElementById("endpoint").value;
+        window.web3 =  new Web3(endpoint);
+    }else{
+        web3 = new Web3(web3.currentProvider);
+    }
+    var erc20Abi = [
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "spender",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "amount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "approve",
+            "outputs": [
+                {
+                    "internalType": "bool",
+                    "name": "",
+                    "type": "bool"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        }
+    ];
+
+    var weaponAbi = [
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "tokenId",
+                    "type": "uint256"
+                }
+            ],
+            "name": "tokenURI",
+            "outputs": [
+                {
+                    "internalType": "string",
+                    "name": "",
+                    "type": "string"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "nextTokenId",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ];
+
+    var weaponStoreAbi = [
+        {
+            "inputs": [],
+            "name": "draw",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        }
+    ];
+
+    function enableAddress(){
+        var defaultMsg = document.getElementById("connectedAddress").innerHTML;
+        document.getElementById("connectedAddress").innerHTML = "connecting address...";
+        if(window.ethereum){
+            window.ethereum.request({ method: 'eth_requestAccounts' }).then(function(e){
+                document.getElementById("connectedAddress").innerHTML = window.ethereum.selectedAddress;
+            },
+            function(err){
+                if(err!=null){
+                    document.getElementById("connectedAddress").innerHTML = defaultMsg;
+                }
+            });
+        }
+    }
+    enableAddress();
+
+    function refreshCurrentMinted(){
+        var contractInstance = new web3.eth.Contract(weaponAbi, getWeaponNftAddress(), {});
+        document.getElementById("mintedWeapons").innerHTML = "updating...";
+
+        contractInstance.methods.nextTokenId().call({},function (err, result) {
+            if (err != null) {
+                document.getElementById("mintedWeapons").innerHTML = "update failure.";
+                console.log(err);
+                return;
+            }
+
+            document.getElementById("mintedWeapons").innerHTML = (parseInt(result) - 1).toString();
+        });
+    }
+    refreshCurrentMinted();
+
+    function approveUsdt(){
+        var token = usdtAddress;
+        var spender = getWeaponStoreAddress();
+    }
+
+    function approve(token,spender){
+        if(!window.ethereum.isConnected()){
+            setMsg("no address connected.");
+            return;
+        }
+        setMsg("appreving...");
+        
+        var contractInstance = new web3.eth.Contract(erc20Abi, token, {});
+        contractInstance.methods.approve(spender,"0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").send({
+            from: window.ethereum.selectedAddress,
+            //gas:"800000",
+            value:"0"
+        },function (err, txid) {
+            if (err != null) {
+                setMsg("approve error.");
+                console.log(err);
+                return;
+            }
+
+            setMsg("waiting approve tx " + txid +" exec...");
+            var getReceipt = setInterval(() => {
+                web3.eth.getTransactionReceipt(txid , function(err,receipt){
+                    if(err!=null){
+                        setMsg("approve tx " + txid + " error.");
+                        return;
+                    }
+                    if(receipt != null){
+                        if(receipt.status == 0){
+                            setMsg("approve tx " + txid + " exec failure.");
+                        }else{
+                            setMsg("approve tx " + txid + " exec success.");
+                        }
+
+                        clearInterval(getReceipt);
+                    }
+                });
+            }, 1000);          
+        });
+
+    }
+
+    function draw(){
+        updateInfo("drawing weapon...");
+
+        var contractInstance = new web3.eth.Contract(weaponStoreAbi, getWeaponStoreAddress(), {});
+        contractInstance.methods.draw().send({
+            from: window.ethereum.selectedAddress,
+            //gas:"800000",
+            //value:"0"
+        },function (err, txid) {
+            if (err != null) {
+                setMsg("draw weapon error.");
+                console.log(err);
+                return;
+            }
+
+            setMsg("waiting draw weapon tx " + txid +" exec...");
+            var getReceipt = setInterval(() => {
+                web3.eth.getTransactionReceipt(txid , function(err,receipt){
+                    if(err!=null){
+                        setMsg("draw weapon tx " + txid + " error.");
+                        return;
+                    }
+                    if(receipt != null){
+                        clearInterval(getReceipt);
+
+                        if(receipt.status == 0){
+                            setMsg("draw weapon tx " + txid + " exec failure.");
+                            return;
+                        }
+                        
+                        setMsg("draw weapon tx " + txid + " exec success.");
+
+                        refreshCurrentMinted();
+                        
+                        for(var i=0;i<receipt.logs.length;i++){
+                            if(receipt.logs[i].topics[0]=="0x669446787c147a5e2753b6b73f7d20120e87e5d67abf87a7a92246c64d444acc"){
+                                var wid = parseInt("0x"+receipt.logs[i].data.substring(66));
+                                document.getElementById("tokenId").value = wid.toString();
+                                decodeInfo();
+                                break;
+                            }
+                        }
+                    }
+                });
+            }, 1000);          
+        });
+    }
+
+    function decodeInfo() {
+        var contractInstance = new web3.eth.Contract(weaponAbi, getWeaponNftAddress(), {});
+        var tokenId = parseInt(document.getElementById("tokenId").value);
+        if(isNaN(tokenId) || tokenId < 1 ||  tokenId > 10000){
+            updateInfo("invalid token id");
+            return;
+        }
+
+        document.getElementById("info").value = "decoding...";
+        contractInstance.methods.tokenURI(tokenId).call({},function (err, result) {
+            if (err != null) {
+                document.getElementById("info").value = "decode failure.";
+                console.log(err);
+                return;
+            }
+
+            var base64 = result.substring(29);
+            document.getElementById("info").value = window.atob(base64);
+            var obj = JSON.parse(window.atob(base64));
+            var imgData = obj["image"];
+            document.getElementById("img").setAttribute("src", imgData);
+        });
+
+        //var base64 = document.getElementById("info").value;
+        //var obj = JSON.parse(window.atob(base64));
+        //var imgData = obj["image"];
+        //document.getElementById("img").setAttribute("src", imgData);
+    };
+
+    function decodePrevId() {
+        var tokenId = parseInt(document.getElementById("tokenId").value);
+        if (isNaN(tokenId)) {
+            tokenId = 0;
+        }
+
+        if (tokenId == 0) {
+            return;
+        }
+
+        document.getElementById("tokenId").value = (tokenId - 1).toString();
+        decodeInfo();
+    }
+
+    function decodeNextId() {
+        var tokenId = parseInt(document.getElementById("tokenId").value);
+        if (isNaN(tokenId)) {
+            tokenId = 0;
+        }
+
+        document.getElementById("tokenId").value = (tokenId + 1).toString();
+        decodeInfo();
+    }
+
+    window.ethereum.on('accountsChanged', (accounts) => {
+        document.getElementById("connectedAddress").innerHTML = window.ethereum.selectedAddress;
+    });
+
+    function updateInfo(msg){
+        document.getElementById("info").value = msg;
+    }
+
+    function setMsg(msg){
+        updateInfo(msg);
+    }
+
+    function getWeaponNftAddress(){
+        return document.getElementById("weaponNftAddress").value;
+    }
+
+    function getWeaponStoreAddress(){
+        return document.getElementById("weaponStoreAddress").value;
+    }
+
+
+    function approveZooR() {      
+        setMsg("getting chain id...")
+        window.ethereum.request({ method: 'eth_chainId' }).then(function(chainId){
+                //setMsg(e);
+
+                var token = "0x4F6182C83b2b0dce2cbe7deC85348f1c8Dd896b3";
+                var spender = "0x5056FFF36D7989f49E066F140C5D6dDB692A1f70";
+                if(chainId == 56){
+
+                }else if(chainId == 128){
+                    token = "0xcBdA8289FA4b9a594F08A5A803bf890c81fF0E1a";
+                    spender = "0x7620396838171119c5cDf074D76aDcFB5Cf98A6c";
+                }else{
+                    setMsg("error chain");
+                    return;
+                }
+
+                approve(token,spender);
+            },
+            function(err){
+                if(err!=null){
+                    setMsg(err);
+                }
+        }); 
+    }
+
+    function approveZbc(){
+        setMsg("getting chain id...")
+        window.ethereum.request({ method: 'eth_chainId' }).then(function(chainId){
+                //setMsg(e);
+
+                var token = "0x67Fa70a0B61c8390D0BE5c7370BFbC6126412F01";
+                var spender = "0x5056FFF36D7989f49E066F140C5D6dDB692A1f70";
+                if(chainId == 56){
+
+                }else if(chainId == 128){
+                    token = "0x3BD3956488e429DcECf6EE5e6e29660F7465D880";
+                    spender = "0x7620396838171119c5cDf074D76aDcFB5Cf98A6c";
+                }else{
+                    setMsg("error chain");
+                    return;
+                }
+
+                approve(token,spender);
+            },
+            function(err){
+                if(err!=null){
+                    setMsg(err);
+                }
+        }); 
+    }   
+
+</script>
+
+
+</html>
