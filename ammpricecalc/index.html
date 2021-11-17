@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>amm price calc</title>
+    <link rel="shortcut icon" href="https://avatars.githubusercontent.com/u/13977767"/>
+    <link rel="stylesheet" href="./libs/bootstrap.min.css" />
+    <style>
+        div.input-group {
+            margin-top: 5px;
+        }
+        
+        ul.nav-tabs{
+            margin-top: 5px;
+        }
+
+        div.tab-pane{
+             margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="panel panel-default">
+        <div class="panel-body">
+            <div class="input-group">
+                <label>current chain：</label>
+                <span id="currentChain">BSC mainnet</span>
+            </div>
+            <!-- <div class="input-group">
+                <label>supported chains：</label>
+                <span id="supportedChains"></span>
+            </div>
+            <div class="input-group">
+                <label>connected address：</label>
+                <span id="connectedAddress">no address connected</span>
+            </div> -->
+            <!-- <div class="input-group" v-if="rpcInputShow" id="rpcEndpointDiv" style="display: none;margin-top: 5px;">                
+                <label class="input-group-addon">rpc endpoint：</label>
+                <input class="form-control" id="endpoint" value="https://data-seed-prebsc-1-s3.binance.org:8545/" style="width:50%" />
+            </div> -->
+            <!-- <div class="input-group">
+                <label>minted weapons：</label>
+                <span id="mintedWeapons">0</span>
+            </div> -->
+            <div style="height:5px;"></div>
+            <div class="input-group">
+                <span class="input-group-addon">token0：</span>
+                <input class="form-control" id="token0" value="获取中..." style="width:50%" readonly />
+            </div>
+            <div style="height:5px;"></div>
+            <div class="input-group">
+                <span class="input-group-addon">token1：</span>
+                <input class="form-control" id="token1" value="获取中..." style="width:50%" readonly />
+            </div>
+            <div style="height:5px;"></div>
+            <div class="input-group">
+                <span class="input-group-addon">交易对地址：</span>
+                <input class="form-control" id="pairAddress" value="获取中..." style="width:50%" readonly />
+            </div>
+            <div style="height:5px;"></div>
+            <div class="input-group">
+                <span class="input-group-addon" id="reserve0Title">token0储量：</span>
+                <input class="form-control" id="reserve0" value="获取中..." style="width:50%" readonly />
+            </div>
+            <div style="height:5px;"></div>
+            <div class="input-group">
+                <span class="input-group-addon" id="reserve1Title">token1储量：</span>
+                <input class="form-control" id="reserve1" value="获取中..." style="width:50%" readonly />
+            </div>
+            <div style="height:5px;"></div>
+            <div class="input-group">
+                <label>当前价格：</label>
+                <span id="currentPrice">获取中...</span>
+            </div>
+            <div style="height:5px;"></div>
+            <div class="input-group">
+                <span class="input-group-addon" id="targetPriceTitle">目标价格：</span>
+                <input class="form-control" id="targetPrice" type="number" value="" style="width:50%" />
+            </div>
+            <div class="input-group">
+                <span>目标价格预览：</span>
+                <span id="targetPriceView"></span>
+            </div>
+
+            <textarea rows="10" class="form-control" id="info" style="margin-top: 5px;"></textarea>
+            <div style="height:10px;"></div>
+            <div>
+                <button id="calc" class="btn btn-default" disabled>计算</button>
+            </div>        
+        </div>
+    </div>
+</body>
+<script src="./libs/jquery-3.6.0.js"></script>
+<script src="./libs/bootstrap.min.js"></script>
+<script src="./libs/web3.min.js"></script>
+<script src="./libs/abis.js"></script>
+<!-- <script src="https://peterolson.github.io/BigInteger.js/BigInteger.min.js"></script> -->
+
+<script type="text/javascript">
+
+    var endpoint = "https://bsc-dataseed.binance.org/";
+    var factoryAddress = "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73"; //pancake v2 factory
+    var feeRate = 0.0025;
+    var t0 = "0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3";
+    var t1 = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
+    window.web3 =  new Web3(endpoint);
+
+    var pairAddress = "";
+    var token0Address = "";
+    var token1Address = "";
+    
+    var token1Instance = new web3.eth.Contract(erc20Abi, token1Address, {});   
+    var token0Symbol = "";
+    var token1Symbol = "";
+    var token0Decimals = 0;
+    var token1Decimals = 0;
+    var reserve0 = 0;
+    var reserve1 = 0;
+    var price0 = 0;
+    var price1 = 0;
+    var initCompleted = false;
+
+    var factoryInstance = new web3.eth.Contract(factoryAbi, factoryAddress, {});   
+    setMsg("正在初始化...")
+    var pairInstance = null;
+    factoryInstance.methods.getPair(t0,t1).call({},function (err, result) {
+        if (err != null) {
+            setMsg(err.message);
+            return;
+        }
+        pairAddress = result;
+        $('#pairAddress').val(pairAddress);
+        pairInstance = new web3.eth.Contract(swapPairAbi, pairAddress, {});
+        initToken0(pairInstance);
+        initToken1(pairInstance);
+
+        pairInstance.methods.getReserves().call({},function (err, reserves){
+            if (err != null) {
+                setMsg(err.message);
+                return;
+            }
+
+            reserve0 = reserves.reserve0;
+            reserve1 = reserves.reserve1;
+            console.log(reserves)
+        });
+    });
+
+    window.reservesIntserval = setInterval(function(){
+        if(reserve1 && token0Symbol && token0Decimals > 0 && reserve1 && token1Symbol && token1Decimals > 0){          
+            
+            price0 = parseFloat(fromWei(reserve0,token0Decimals)) / parseFloat(fromWei(reserve1,token1Decimals));
+            price1 = parseFloat(fromWei(reserve1,token1Decimals)) / parseFloat(fromWei(reserve0,token0Decimals));
+
+            var priceStr = "1 " + token1Symbol + " = " + price0 + " "+token0Symbol;
+            priceStr+=", " + "1 " + token0Symbol + " = " + price1 +" "+ token1Symbol;
+            $('#currentPrice').text(priceStr);
+
+            $('#reserve0').val(fromWei(reserve0,token0Decimals));
+            $('#reserve1').val(fromWei(reserve1,token1Decimals));
+
+            $("#targetPriceTitle").text("目标价格(1 "+ token0Symbol +" = ??? "+token1Symbol+"):");
+
+
+            initCompleted = true;
+            $('#calc').removeAttr('disabled');
+            setMsg('');
+            clearInterval(window.reservesIntserval);
+        }
+    },500);
+
+    function initToken0(pairInstance){
+        pairInstance.methods.token0().call({},function(err,token0){
+            if (err != null) {
+                $('#token0').val(err.message);
+                return;
+            }
+            token0Address = token0;
+
+            var token0Instance = new web3.eth.Contract(erc20Abi, token0Address, {});   
+            token0Instance.methods.symbol().call({},function(err,tokenSymbol){
+                if (err != null) {
+                    $('#token0').val(err.message);
+                    return;
+                }
+                token0Symbol = tokenSymbol;
+                $('#token0').val(tokenSymbol + "("+token0Address+")");
+                $('#reserve0Title').text(tokenSymbol+"储量:");
+            });
+
+            token0Instance.methods.decimals().call({},function(err,tokenDecimals){
+                if (err != null) {
+                    $('#token0').val(err.message);
+                    return;
+                }
+                token0Decimals = tokenDecimals;
+                //$('#token0').val($('#token0').val() + "  decimals:"+tokenDecimals);
+
+            });
+        });        
+    }
+
+    function initToken1(pairInstance){
+        pairInstance.methods.token1().call({},function(err,token1){
+            if (err != null) {
+                $('#token1').val(err.message);
+                return;
+            }
+            token1Address = token1;
+
+            var token1Instance = new web3.eth.Contract(erc20Abi, token1Address, {});   
+            token1Instance.methods.symbol().call({},function(err,tokenSymbol){
+                if (err != null) {
+                    $('#token1').val(err.message);
+                    return;
+                }
+                token1Symbol = tokenSymbol;
+                $('#token1').val(tokenSymbol + "("+token1Address+")");
+                $('#reserve1Title').text(tokenSymbol+"储量:");
+            });
+
+            token1Instance.methods.decimals().call({},function(err,tokenDecimals){
+                if (err != null) {
+                    $('#token1').val(err.message);
+                    return;
+                }
+                token1Decimals = tokenDecimals;
+                //$('#token1').val($('#token1').val() + "  decimals:"+tokenDecimals);
+            });
+        });        
+    }
+
+    $('#calc').on('click',function(){
+        calc();
+    });
+
+    function calc(){
+        if(!initCompleted){
+            return;
+        }
+        var targetPriceY = parseFloat($('#targetPrice').val());
+        if(isNaN(targetPriceY) || targetPriceY <= 0){
+            alert("目标价格格式不正确")
+            return;
+        }
+
+        var amountIn = 0;
+        var resultStr="使用";
+        var xReservesBi = parseFloat(reserve0); 
+        var yReservesBi = parseFloat(reserve1); 
+        var currentPrice = price1;
+        var isDown = currentPrice > targetPriceY;
+        if (isDown)
+        {
+            amountIn = getSwapInWithFee(xReservesBi, yReservesBi, targetPriceY, feeRate);
+            var amountOut = getAmountOut(amountIn,xReservesBi,yReservesBi,feeRate);
+
+            var afterReserve0 = parseFloat(reserve0) + amountIn;
+            var afterReserve1 = parseFloat(reserve1) - amountOut;
+            var afterPrice0 = parseFloat(fromWei(afterReserve0,token0Decimals)) / parseFloat(fromWei(afterReserve1,token0Decimals));
+            var afterPrice1 = parseFloat(fromWei(afterReserve1,token0Decimals)) / parseFloat(fromWei(afterReserve0,token0Decimals));
+
+            resultStr += "使用" + fromWei(amountIn,token0Decimals) +" "+ token0Symbol + " 兑换约" +  fromWei(amountOut,token1Decimals) + " " + token1Symbol;
+            resultStr += "\n兑换后预计池子储量：" + fromWei(afterReserve0,token0Decimals) +" "+ token0Symbol + ", " + fromWei(afterReserve1,token1Decimals) +" "+ token1Symbol;
+            resultStr += "\n兑换后预计价格：" + "1 " + token0Symbol +" = " + afterPrice1 + " " + token1Symbol+", " + "1 " + token1Symbol + " = " + afterPrice0 +" "+token0Symbol;
+        }
+        else
+        {
+            amountIn = getSwapInWithFee(yReservesBi, xReservesBi, Math.floor(1 / targetPriceY * Math.pow(10,9)) / Math.pow(10,9), feeRate);
+            var amountOut = getAmountOut(amountIn,yReservesBi,xReservesBi,feeRate);
+
+            var afterReserve1 = parseFloat(reserve1) + amountIn;
+            var afterReserve0 = parseFloat(reserve0) - amountOut;
+            var afterPrice0 = parseFloat(fromWei(afterReserve0,token0Decimals)) / parseFloat(fromWei(afterReserve1,token0Decimals));
+            var afterPrice1 = parseFloat(fromWei(afterReserve1,token0Decimals)) / parseFloat(fromWei(afterReserve0,token0Decimals));
+
+            resultStr += "使用" + fromWei(amountIn,token1Decimals) +" "+ token1Symbol + " 兑换约" +  fromWei(amountOut,token0Decimals) + " " + token0Symbol;
+            resultStr += "\n兑换后预计池子储量：" + fromWei(afterReserve0,token0Decimals) +" "+ token0Symbol + ", " + fromWei(afterReserve1,token1Decimals) +" "+ token1Symbol;
+            resultStr += "\n兑换后预计价格：" + "1 " + token0Symbol +" = " + afterPrice1 + " " + token1Symbol+", " + "1 " + token1Symbol + " = " + afterPrice0 +" "+token0Symbol;
+        }
+
+        setMsg(resultStr);
+    }
+
+    function getSwapInWithFee(xReserves, yReserves, targetPriceY, _feeRate){
+        var f = getNumeratorAndDenominator(1 - _feeRate);
+        var priceYf = getNumeratorAndDenominator(targetPriceY);
+        //b的平方-4ac
+        var delta = Math.pow((f.Denominator + f.Numerator) * -1, 2) - 4 * -1 * f.Numerator * priceYf.Numerator / priceYf.Denominator * (f.Denominator * xReserves * yReserves - f.Denominator * priceYf.Numerator / priceYf.Denominator * xReserves);
+        if (delta < 0){
+            return getSwapIn(xReserves, yReserves, targetPriceY);
+        }
+
+        var temp = (f.Denominator + f.Numerator) * -1 * priceYf.Numerator / priceYf.Denominator * xReserves;
+        var deltaSqrt = Sqrt(delta);
+        var root1 = -1 * (temp + deltaSqrt) / (2 * -1 * f.Numerator * priceYf.Numerator / priceYf.Denominator);
+        var root2 = delta == 0 ? root1 : -1 * (temp - deltaSqrt) / (2 * -1 * f.Numerator * priceYf.Numerator / priceYf.Denominator);
+        if (root1 > 0 && root2 > 0){
+            return root1 < root2 ? root1 : root2;
+        }
+        else{
+            if (root1 > 0){
+                return root1;
+            }
+            else if (root2 > 0){
+                return root2;
+            }
+
+            return root1 > root2 ? root1 : root2;
+        }
+    }
+
+    function getSwapIn(xReserves, yReserves, targetPriceY)
+    {
+        var f = getNumeratorAndDenominator(targetPriceY);
+        //var yIncrment = Sqrt(xReserves * yReserves * f.Numerator / f.Denominator) - yReserves;
+        var xIncrment = Sqrt(xReserves * yReserves * f.Numerator / f.Denominator) / f.Numerator * f.Denominator - xReserves;
+
+        return xIncrment;
+    }
+
+    function getNumeratorAndDenominator(decimal){
+        var decimalStr = trim0(decimal.toString());
+        var power = decimalStr.indexOf(".") != -1 ? decimalStr.length - 1 : decimalStr.length;
+        //分母
+        var denominator = Math.pow(10, power);
+        //分子
+        var numerator = decimal * Math.pow(10, power);
+
+        return {
+            "Numerator":numerator,
+            "Denominator":denominator
+        };
+    }
+
+    function getAmountOut(amountIn, xReserves, yReserves, _feeRate){
+        var feeFraction = getNumeratorAndDenominator(1 - _feeRate);
+
+        //输出金额=输入金额 * 997 * 输出储量 / (1000*输入储量 + 输入金额*997) 
+        var amountOut = amountIn * feeFraction.Numerator * yReserves / (feeFraction.Denominator * xReserves + amountIn * feeFraction.Numerator);
+        return amountOut;
+    }
+
+    function trim0(str){
+        var res =str.trim();
+        while(res[0]=='0'){
+            res=res.substr(1);
+        }
+        while(res[res.length-1]=='0'){
+            res=res.substr(0,res.length-1);
+        }
+
+        return res;
+    }
+
+    // var _fastSqrtSmallNumber = BigInt(4503599761588223); // as static readonly = reduce compare overhead
+    // function Sqrt(value)
+    // {
+    //     if (value <= _fastSqrtSmallNumber){ // small enough for Math.Sqrt() or negative?        
+    //         if (value.Sign < 0) throw new ArgumentException("Negative argument.");
+    //         return (ulong)Math.Sqrt((ulong)value);
+    //     }
+
+    //     BigInteger root; // now filled with an approximate value
+    //     int byteLen = value.ToByteArray().Length;
+    //     if (byteLen < 128) // small enough for direct double conversion?
+    //     {
+    //         root = (BigInteger)Math.Sqrt((double)value);
+    //     }
+    //     else // large: reduce with bitshifting, then convert to double (and back)
+    //     {
+    //         root = (BigInteger)Math.Sqrt((double)(value >> (byteLen - 127) * 8)) << (byteLen - 127) * 4;
+    //     }
+
+    //     for (; ; )
+    //     {
+    //         var root2 = value / root + root >> 1;
+    //         if ((root2 == root || root2 == root + 1) && IsSqrt(value, root)) return root;
+    //         root = value / root2 + root2 >> 1;
+    //         if ((root == root2 || root == root2 + 1) && IsSqrt(value, root2)) return root2;
+    //     }
+    // }
+
+    function Sqrt(n){
+        return Math.sqrt(Number(n));
+    }
+    
+    $('#targetPrice').on('keyup',function(){
+        var price = parseFloat($('#targetPrice').val());
+        if(!initCompleted || isNaN(price) || price < 0){
+            return;
+        }
+
+        var targetPrice1 = price;
+        var targetPrice0 = 1 / price;
+
+        var priceStr = "1 " + token1Symbol + " = " + targetPrice0 + " "+token0Symbol;
+        priceStr+=", " + "1 " + token0Symbol + " = " + targetPrice1 +" "+ token1Symbol;
+        $('#targetPriceView').text(priceStr);
+    });
+
+    function setMsg(msg){
+        $('#info').val(msg);
+    }
+
+    function fromWei(amount, decimals) {
+        var amountStr = amount.toString();
+        if (amountStr.indexOf('e') != -1) {
+            var arr = amountStr.split('e');
+            var d = parseInt(arr[1]);
+            amountStr = d < 0 ? fromWei(arr[0], Math.abs(d), true) : toWei(arr[0], Math.abs(d), true);
+        }
+
+        var index = amountStr.indexOf(".");
+        if (index == -1) {
+            var pointIndex = amountStr.length - decimals;
+            if (pointIndex > 0) {
+                var temp = amountStr.substr(0, pointIndex);
+                temp += parseInt(amountStr.substr(pointIndex, decimals)) > 0 ? "." + amountStr.substr(pointIndex, decimals) : "";
+                amountStr = temp;
+            }
+            else {
+                var temp = "0.";
+                for (var i = 0; i < Math.abs(pointIndex); i++) {
+                    temp += "0";
+                }
+                amountStr = temp + amountStr;
+            }
+        }
+        else {
+            var pointIndex = index - decimals;
+            var temp = "";
+            if (pointIndex > 0) {
+                temp += amountStr.substring(0, pointIndex + 1);
+                temp += "." + amountStr.substr(pointIndex + 1).replace('.', '');
+            }
+            else {
+                temp += "0.";
+                var fillLength = Math.abs(pointIndex);
+                for (var i = 0; i < fillLength; i++) {
+                    temp += "0";
+                }
+                temp += amountStr.replace('.', '');
+            }
+
+            amountStr = temp;
+        }
+
+        return amountStr;
+    };
+
+    function toWei (amount, decimals) {
+        var amountStr = amount.toString();
+        if (amountStr.indexOf('e') != -1) {
+            var arr = amountStr.split('e');
+            var d = parseInt(arr[1]);
+            amountStr = d < 0 ? fromWei(arr[0], Math.abs(d), true) : toWei(arr[0], Math.abs(d), true);
+        }
+
+        var index = amountStr.indexOf(".");
+        if (index == -1) {
+            for (var i = 0; i < decimals; i++) {
+                amountStr += "0";
+            }
+        }
+        else {
+            var pointIndex = index + decimals;
+            var temp = amountStr.substr(0, index);
+            if (pointIndex < amountStr.length - 1) {
+                temp += amountStr.substring(index + 1, pointIndex + 1);
+                temp += "." + amountStr.substr(pointIndex + 1);
+            }
+            else {
+                temp += amountStr.substr(index + 1);
+                var fillLength = pointIndex - amountStr.length + 1;
+                for (var i = 0; i < fillLength; i++) {
+                    temp += "0";
+                }
+            }
+
+            amountStr = temp;
+        }
+
+        return amountStr;
+    };
+
+</script>
+
+</html>
