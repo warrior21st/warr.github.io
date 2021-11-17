@@ -6,19 +6,6 @@
     <title>amm price calc</title>
     <link rel="shortcut icon" href="https://avatars.githubusercontent.com/u/13977767"/>
     <link rel="stylesheet" href="./libs/bootstrap.min.css" />
-    <style>
-        div.input-group {
-            margin-top: 5px;
-        }
-        
-        ul.nav-tabs{
-            margin-top: 5px;
-        }
-
-        div.tab-pane{
-             margin-top: 5px;
-        }
-    </style>
 </head>
 <body>
     <div id="app" class="panel panel-default">
@@ -43,6 +30,11 @@
                 <label>minted weapons：</label>
                 <span id="mintedWeapons">0</span>
             </div> -->
+            <div style="height:5px;"></div>
+            <div class="input-group">
+                <span class="input-group-addon">rpc节点：</span>
+                <input class="form-control" id="endpoint" value="https://bsc-dataseed.binance.org/" style="width:50%" readonly />
+            </div>
             <div style="height:5px;"></div>
             <div class="input-group">
                 <span class="input-group-addon">token0：</span>
@@ -99,7 +91,7 @@
 
 <script type="text/javascript">
 
-    var endpoint = "https://bsc-dataseed.binance.org/";
+    var endpoint = $('#endpoint').val();
     var factoryAddress = "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73"; //pancake v2 factory
     var feeRate = 0.0025;
     var t0 = "0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3";
