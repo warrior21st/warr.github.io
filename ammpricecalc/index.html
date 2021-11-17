@@ -62,16 +62,16 @@
             </div>
             <div style="height:5px;"></div>
             <div class="input-group">
-                <label>当前价格：</label>
+                <label>当前比例：</label>
                 <span id="currentPrice">获取中...</span>
             </div>
             <div style="height:5px;"></div>
             <div class="input-group">
-                <span class="input-group-addon" id="targetPriceTitle">目标价格：</span>
+                <span class="input-group-addon" id="targetPriceTitle">目标比例：</span>
                 <input class="form-control" id="targetPrice" type="number" value="" style="width:50%" />
             </div>
             <div class="input-group">
-                <label>目标价格预览：</label>
+                <label>目标比例预览：</label>
                 <span id="targetPriceView"></span>
             </div>
 
@@ -233,7 +233,7 @@
         }
         var targetPriceY = parseFloat($('#targetPrice').val());
         if(isNaN(targetPriceY) || targetPriceY <= 0){
-            alert("目标价格格式不正确")
+            alert("目标比例格式不正确")
             return;
         }
 
@@ -255,7 +255,7 @@
 
             resultStr += "使用" + fromWei(amountIn,token0Decimals) +" "+ token0Symbol + " 兑换约" +  fromWei(amountOut,token1Decimals) + " " + token1Symbol;
             resultStr += "\n兑换后预计池子储量：" + fromWei(afterReserve0,token0Decimals) +" "+ token0Symbol + ", " + fromWei(afterReserve1,token1Decimals) +" "+ token1Symbol;
-            resultStr += "\n兑换后预计价格：" + "1 " + token0Symbol +" = " + afterPrice1 + " " + token1Symbol+", " + "1 " + token1Symbol + " = " + afterPrice0 +" "+token0Symbol;
+            resultStr += "\n兑换后预计比例：" + "1 " + token0Symbol +" = " + afterPrice1 + " " + token1Symbol+", " + "1 " + token1Symbol + " = " + afterPrice0 +" "+token0Symbol;
         }
         else
         {
@@ -269,7 +269,7 @@
 
             resultStr += "使用" + fromWei(amountIn,token1Decimals) +" "+ token1Symbol + " 兑换约" +  fromWei(amountOut,token0Decimals) + " " + token0Symbol;
             resultStr += "\n兑换后预计池子储量：" + fromWei(afterReserve0,token0Decimals) +" "+ token0Symbol + ", " + fromWei(afterReserve1,token1Decimals) +" "+ token1Symbol;
-            resultStr += "\n兑换后预计价格：" + "1 " + token0Symbol +" = " + afterPrice1 + " " + token1Symbol+", " + "1 " + token1Symbol + " = " + afterPrice0 +" "+token0Symbol;
+            resultStr += "\n兑换后预计比例：" + "1 " + token0Symbol +" = " + afterPrice1 + " " + token1Symbol+", " + "1 " + token1Symbol + " = " + afterPrice0 +" "+token0Symbol;
         }
 
         setMsg(resultStr);
