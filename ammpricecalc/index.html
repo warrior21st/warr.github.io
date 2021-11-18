@@ -4,7 +4,6 @@
 <head>
     <meta charset="utf-8" />
     <title>amm price calc</title>
-    <link rel="shortcut icon" href="https://avatars.githubusercontent.com/u/13977767"/>
     <link rel="stylesheet" href="./libs/bootstrap.min.css" />
 </head>
 <body>
@@ -70,10 +69,15 @@
                 <span class="input-group-addon" id="targetPriceTitle">目标比例：</span>
                 <input class="form-control" id="targetPrice" type="number" value="" style="width:50%" />
             </div>
+            <div style="height:5px;"></div>
             <div class="input-group">
+                <span class="input-group-addon" id="targetPriceTitle2">目标比例：</span>
+                <input class="form-control" id="targetPrice2" type="number" value="" style="width:50%" />
+            </div>
+            <!-- <div class="input-group">
                 <label>目标比例预览：</label>
                 <span id="targetPriceView"></span>
-            </div>
+            </div> -->
 
             <textarea rows="10" class="form-control" id="info" style="margin-top: 5px;"></textarea>
             <div style="height:10px;"></div>
@@ -94,8 +98,8 @@
     var endpoint = $('#endpoint').val();
     var factoryAddress = "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73"; //pancake v2 factory
     var feeRate = 0.0025;
-    var t0 = "0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3";
-    var t1 = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
+    var t0 = "0xf24fbc7f4219ebdc6ca1a66e0b43f549f4a453b1";
+    var t1 = "0x55d398326f99059fF775485246999027B3197955";
     window.web3 =  new Web3(endpoint);
 
     var pairAddress = "";
@@ -153,7 +157,7 @@
             $('#reserve1').val(fromWei(reserve1,token1Decimals));
 
             $("#targetPriceTitle").text("目标比例(1 "+ token0Symbol +" = ??? "+token1Symbol+"):");
-
+            $("#targetPriceTitle2").text("目标比例(1 "+ token1Symbol +" = ??? "+token0Symbol+"):");            
 
             initCompleted = true;
             $('#calc').removeAttr('disabled');
@@ -186,7 +190,7 @@
                     $('#token0').val(err.message);
                     return;
                 }
-                token0Decimals = tokenDecimals;
+                token0Decimals = parseInt(tokenDecimals);
                 //$('#token0').val($('#token0').val() + "  decimals:"+tokenDecimals);
 
             });
@@ -217,7 +221,7 @@
                     $('#token1').val(err.message);
                     return;
                 }
-                token1Decimals = tokenDecimals;
+                token1Decimals = parseInt(tokenDecimals);
                 //$('#token1').val($('#token1').val() + "  decimals:"+tokenDecimals);
             });
         });        
@@ -231,8 +235,8 @@
         if(!initCompleted){
             return;
         }
-        var targetPriceY = parseFloat($('#targetPrice').val());
-        targetPriceY = targetPriceY * Math.pow(10,token1Decimals - token0Decimals);
+        var targetPriceYCommon = parseFloat($('#targetPrice').val());
+        var targetPriceY = targetPriceYCommon * Math.pow(10,token1Decimals - token0Decimals);
         if(isNaN(targetPriceY) || targetPriceY <= 0){
             alert("目标比例格式不正确")
             return;
@@ -243,7 +247,7 @@
         var xReservesBi = parseFloat(reserve0); 
         var yReservesBi = parseFloat(reserve1); 
         var currentPrice = price1;
-        var isDown = currentPrice > targetPriceY;
+        var isDown = currentPrice > targetPriceYCommon;
         if (isDown)
         {
             amountIn = getSwapInWithFee(xReservesBi, yReservesBi, targetPriceY, feeRate);
@@ -251,8 +255,8 @@
 
             var afterReserve0 = parseFloat(reserve0) + amountIn;
             var afterReserve1 = parseFloat(reserve1) - amountOut;
-            var afterPrice0 = parseFloat(fromWei(afterReserve0,token0Decimals)) / parseFloat(fromWei(afterReserve1,token0Decimals));
-            var afterPrice1 = parseFloat(fromWei(afterReserve1,token0Decimals)) / parseFloat(fromWei(afterReserve0,token0Decimals));
+            var afterPrice0 = parseFloat(fromWei(afterReserve0,token0Decimals)) / parseFloat(fromWei(afterReserve1,token1Decimals));
+            var afterPrice1 = parseFloat(fromWei(afterReserve1,token1Decimals)) / parseFloat(fromWei(afterReserve0,token0Decimals));
 
             resultStr += "使用" + fromWei(amountIn,token0Decimals) +" "+ token0Symbol + " 兑换约" +  fromWei(amountOut,token1Decimals) + " " + token1Symbol;
             resultStr += "\n兑换后预计池子储量：" + fromWei(afterReserve0,token0Decimals) +" "+ token0Symbol + ", " + fromWei(afterReserve1,token1Decimals) +" "+ token1Symbol;
@@ -260,13 +264,13 @@
         }
         else
         {
-            amountIn = getSwapInWithFee(yReservesBi, xReservesBi, Math.floor(1 / targetPriceY * Math.pow(10,9)) / Math.pow(10,9), feeRate);
+            amountIn = getSwapInWithFee(yReservesBi, xReservesBi, 1 / targetPriceY, feeRate);
             var amountOut = getAmountOut(amountIn,yReservesBi,xReservesBi,feeRate);
 
             var afterReserve1 = parseFloat(reserve1) + amountIn;
             var afterReserve0 = parseFloat(reserve0) - amountOut;
-            var afterPrice0 = parseFloat(fromWei(afterReserve0,token0Decimals)) / parseFloat(fromWei(afterReserve1,token0Decimals));
-            var afterPrice1 = parseFloat(fromWei(afterReserve1,token0Decimals)) / parseFloat(fromWei(afterReserve0,token0Decimals));
+            var afterPrice0 = parseFloat(fromWei(afterReserve0,token0Decimals)) / parseFloat(fromWei(afterReserve1,token1Decimals));
+            var afterPrice1 = parseFloat(fromWei(afterReserve1,token1Decimals)) / parseFloat(fromWei(afterReserve0,token0Decimals));
 
             resultStr += "使用" + fromWei(amountIn,token1Decimals) +" "+ token1Symbol + " 兑换约" +  fromWei(amountOut,token0Decimals) + " " + token0Symbol;
             resultStr += "\n兑换后预计池子储量：" + fromWei(afterReserve0,token0Decimals) +" "+ token0Symbol + ", " + fromWei(afterReserve1,token1Decimals) +" "+ token1Symbol;
@@ -388,62 +392,85 @@
         var targetPrice1 = price;
         var targetPrice0 = 1 / price;
 
-        var priceStr = "1 " + token1Symbol + " = " + targetPrice0 + " "+token0Symbol;
-        priceStr+=", " + "1 " + token0Symbol + " = " + targetPrice1 +" "+ token1Symbol;
-        $('#targetPriceView').text(priceStr);
+        $('#targetPrice2').val(targetPrice0);
+
+        // var priceStr = "1 " + token1Symbol + " = " + targetPrice0 + " "+token0Symbol;
+        // priceStr+=", " + "1 " + token0Symbol + " = " + targetPrice1 +" "+ token1Symbol;
+        // $('#targetPriceView').text(priceStr);
     });
+
+    $('#targetPrice2').on('keyup',function(){
+        var price = parseFloat($('#targetPrice2').val());
+        if(!initCompleted || isNaN(price) || price < 0){
+            return;
+        }
+
+        var targetPrice0 = price;
+        var targetPrice1 = 1 / price;
+
+        $('#targetPrice').val(targetPrice1);
+
+        // var priceStr = "1 " + token1Symbol + " = " + targetPrice0 + " "+token0Symbol;
+        // priceStr+=", " + "1 " + token0Symbol + " = " + targetPrice1 +" "+ token1Symbol;
+        // $('#targetPriceView').text(priceStr);
+    });
+
+
 
     function setMsg(msg){
         $('#info').val(msg);
     }
 
     function fromWei(amount, decimals) {
-        var amountStr = amount.toString();
-        if (amountStr.indexOf('e') != -1) {
-            var arr = amountStr.split('e');
-            var d = parseInt(arr[1]);
-            amountStr = d < 0 ? fromWei(arr[0], Math.abs(d), true) : toWei(arr[0], Math.abs(d), true);
-        }
 
-        var index = amountStr.indexOf(".");
-        if (index == -1) {
-            var pointIndex = amountStr.length - decimals;
-            if (pointIndex > 0) {
-                var temp = amountStr.substr(0, pointIndex);
-                temp += parseInt(amountStr.substr(pointIndex, decimals)) > 0 ? "." + amountStr.substr(pointIndex, decimals) : "";
-                amountStr = temp;
-            }
-            else {
-                var temp = "0.";
-                for (var i = 0; i < Math.abs(pointIndex); i++) {
-                    temp += "0";
-                }
-                amountStr = temp + amountStr;
-            }
-        }
-        else {
-            var pointIndex = index - decimals;
-            var temp = "";
-            if (pointIndex > 0) {
-                temp += amountStr.substring(0, pointIndex + 1);
-                temp += "." + amountStr.substr(pointIndex + 1).replace('.', '');
-            }
-            else {
-                temp += "0.";
-                var fillLength = Math.abs(pointIndex);
-                for (var i = 0; i < fillLength; i++) {
-                    temp += "0";
-                }
-                temp += amountStr.replace('.', '');
-            }
+        return (amount / Math.pow(10,decimals)).toString();
 
-            amountStr = temp;
-        }
+        // var amountStr = amount.toString();
+        // if (amountStr.indexOf('e') != -1) {
+        //     var arr = amountStr.split('e');
+        //     var d = parseInt(arr[1]);
+        //     amountStr = d < 0 ? fromWei(arr[0], Math.abs(d), true) : toWei(arr[0], Math.abs(d), true);
+        // }
 
-        return amountStr;
+        // var index = amountStr.indexOf(".");
+        // if (index == -1) {
+        //     var pointIndex = amountStr.length - decimals;
+        //     if (pointIndex > 0) {
+        //         var temp = amountStr.substr(0, pointIndex);
+        //         temp += parseInt(amountStr.substr(pointIndex, decimals)) > 0 ? "." + amountStr.substr(pointIndex, decimals) : "";
+        //         amountStr = temp;
+        //     }
+        //     else {
+        //         var temp = "0.";
+        //         for (var i = 0; i < Math.abs(pointIndex); i++) {
+        //             temp += "0";
+        //         }
+        //         amountStr = temp + amountStr;
+        //     }
+        // }
+        // else {
+        //     var pointIndex = index - decimals;
+        //     var temp = "";
+        //     if (pointIndex > 0) {
+        //         temp += amountStr.substring(0, pointIndex + 1);
+        //         temp += "." + amountStr.substr(pointIndex + 1).replace('.', '');
+        //     }
+        //     else {
+        //         temp += "0.";
+        //         var fillLength = Math.abs(pointIndex);
+        //         for (var i = 0; i < fillLength; i++) {
+        //             temp += "0";
+        //         }
+        //         temp += amountStr.replace('.', '');
+        //     }
+
+        //     amountStr = temp;
+        // }
+
+        // return amountStr;
     };
 
-    function toWei (amount, decimals) {
+    function toWei(amount, decimals) {
         var amountStr = amount.toString();
         if (amountStr.indexOf('e') != -1) {
             var arr = amountStr.split('e');
