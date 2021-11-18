@@ -142,8 +142,8 @@
     window.reservesIntserval = setInterval(function(){
         if(reserve1 && token0Symbol && token0Decimals > 0 && reserve1 && token1Symbol && token1Decimals > 0){          
             
-            price0 = parseFloat(fromWei(reserve0,token0Decimals)) / parseFloat(fromWei(reserve1,token1Decimals));
-            price1 = parseFloat(fromWei(reserve1,token1Decimals)) / parseFloat(fromWei(reserve0,token0Decimals));
+            price0 = parseFloat(reserve0) / parseFloat(reserve1) * Math.pow(10,token1Decimals - token0Decimals); // parseFloat(fromWei(reserve0,token0Decimals)) / parseFloat(fromWei(reserve1,token1Decimals));
+            price1 = parseFloat(reserve1) / parseFloat(reserve0) * Math.pow(10,token0Decimals - token1Decimals); // parseFloat(fromWei(reserve1,token1Decimals)) / parseFloat(fromWei(reserve0,token0Decimals));
 
             var priceStr = "1 " + token1Symbol + " = " + price0 + " "+token0Symbol;
             priceStr+=", " + "1 " + token0Symbol + " = " + price1 +" "+ token1Symbol;
@@ -232,6 +232,7 @@
             return;
         }
         var targetPriceY = parseFloat($('#targetPrice').val());
+        targetPriceY = targetPriceY * Math.pow(10,token1Decimals - token0Decimals);
         if(isNaN(targetPriceY) || targetPriceY <= 0){
             alert("目标比例格式不正确")
             return;
