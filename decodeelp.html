@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>format elp input data</title>
+    <link rel="stylesheet" href="./libs/bootstrap.min.css" />
+</head>
+<body>
+    <div id="app" class="panel panel-default">
+        <div class="panel-body">          
+
+            <textarea rows="20" class="form-control" id="info" style="margin-top: 5px;"></textarea>
+            <div style="height:10px;"></div>
+            <div>
+                <button id="format" class="btn btn-primary">format</button>
+            </div>        
+        </div>
+    </div>
+</body>
+<script src="./libs/jquery-3.6.0.js"></script>
+<script src="./libs/bootstrap.min.js"></script>
+<!-- <script src="https://peterolson.github.io/BigInteger.js/BigInteger.min.js"></script> -->
+
+<script type="text/javascript">
+
+    $('#format').on('click',function(){
+        var inputData = $('#info').val();
+        if(inputData.length<74){
+            return;
+        }
+
+        var result = "";
+        result += inputData.toLowerCase().startsWith("0x") ? inputData.substr(0,10) + "\n" :  inputData.substr(0,8) + "\n";
+        inputData= inputData.toLowerCase().startsWith("0x") ? inputData.substr(10) : inputData.substr(8);
+        for(var i=0;i<inputData.length;i+=64){
+            result+=inputData.substr(i,64) + "\n";
+        }
+
+        setMsg(result);
+    });
+
+
+
+    function setMsg(msg){
+        $('#info').val(msg);
+    }    
+
+</script>
+
+</html>
