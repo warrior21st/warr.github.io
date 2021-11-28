@@ -14,6 +14,8 @@
             <div style="height:10px;"></div>
             <div>
                 <button id="format" class="btn btn-primary">format</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button id="formatOnly64" class="btn btn-primary">formatOnly64</button>
             </div>        
         </div>
     </div>
@@ -33,6 +35,21 @@
         var result = "";
         result += inputData.toLowerCase().startsWith("0x") ? inputData.substr(0,10) + "\n" :  inputData.substr(0,8) + "\n";
         inputData= inputData.toLowerCase().startsWith("0x") ? inputData.substr(10) : inputData.substr(8);
+        for(var i=0;i<inputData.length;i+=64){
+            result+=inputData.substr(i,64) + "\n";
+        }
+
+        setMsg(result);
+    });
+
+    $('#formatOnly64').on('click',function(){
+        var inputData = $('#info').val();
+        if(inputData.length<64){
+            return;
+        }
+
+        var result = "";
+        inputData= inputData.toLowerCase().startsWith("0x") ? inputData.substr(2) : inputData;
         for(var i=0;i<inputData.length;i+=64){
             result+=inputData.substr(i,64) + "\n";
         }
