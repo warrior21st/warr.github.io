@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>valut</title>
+    <link rel="stylesheet" href="./libs/bootstrap.min.css" />
+</head>
+<body>
+    <div id="app" class="container-fluid">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="input-group">
+                    <span class="input-group-addon">chain</span>
+                    <input class="form-control" id="chainId" value="requesting..." readonly />
+                </div>
+                <div class="input-group">
+                    <span class="input-group-addon">connected address</span>
+                    <input class="form-control" id="connectedAddress" value="connecting..." readonly />
+                </div>
+                <div style="height:5px;"></div>
+                <div class="input-group">
+                    <span class="input-group-addon">token</span>
+                    <input class="form-control" id="token" type="text" />
+                </div>
+                <div style="height:5px;"></div>
+                <div class="input-group">
+                    <span class="input-group-addon">to</span>
+                    <input class="form-control" id="to" type="text" value="" />
+                </div>                
+                <div style="height:5px;"></div>
+                <div class="input-group">
+                    <span class="input-group-addon">amount</span>
+                    <input class="form-control" id="amount" type="text" value="" />
+                </div>   
+                <textarea rows="10" class="form-control" id="info" style="margin-top: 5px;"></textarea>
+                <div style="height:10px;"></div>
+                <div>
+                    <button id="withdraw" class="btn btn-primary">withdraw</button>
+                </div>        
+            </div>
+        </div>
+    </div>
+</body>
+<script src="/libs/jquery-3.6.0.js"></script>
+<script src="/libs/bootstrap.min.js"></script>
+<script src="/libs/web3.min.js"></script>
+<script src="https://peterolson.github.io/BigInteger.js/BigInteger.min.js"></script>
+<script src="/libs/ethers.min.js"></script>
+
+<script type="text/javascript">
+    var vaultAbi = [
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "caller",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "CfoTakedETH",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "caller",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "token",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "CfoTakedToken",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "previousOwner",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "newOwner",
+						"type": "address"
+					}
+				],
+				"name": "OwnershipTransferred",
+				"type": "event"
+			},
+			{
+				"inputs": [],
+				"name": "cfo",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "owner",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "renounceOwnership",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_cfo",
+						"type": "address"
+					}
+				],
+				"name": "setCfo",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					}
+				],
+				"name": "takeAllETH",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "takeAllETHToSelf",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "token",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					}
+				],
+				"name": "takeAllToken",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "token",
+						"type": "address"
+					}
+				],
+				"name": "takeAllTokenToSelf",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "takeETH",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "token",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "takeToken",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "newOwner",
+						"type": "address"
+					}
+				],
+				"name": "transferOwnership",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"stateMutability": "payable",
+				"type": "receive"
+			}
+		];
+</script>
+
+<script type="text/javascript">    
+
+    window.web3 = new Web3(web3.currentProvider);
+
+    function initChain(){
+        window.ethereum.request({method:"eth_chainId"}).then(function(e){
+            e=parseInt(e).toString();
+
+            window.chainId=e;
+            $('#chainId').val(e);
+        },
+        function(err){
+            $("#chainId").html("get chainid error");
+        });        
+    }
+    initChain();
+
+    function enableAddress(){
+        if(window.ethereum){
+            window.ethereum.request({ method: 'eth_requestAccounts' }).then(function(e){
+                $("#connectedAddress").val(window.ethereum.selectedAddress);
+            },
+            function(err){
+                if(err!=null){
+                    $("#connectedAddress").val(defaultMsg);
+                }
+            });
+        }
+    }
+    enableAddress();
+
+    var vaultAddress = "0xaeAD9CF57ba7EB5Be23350Ac00879af751Aa929C";    
+
+    $('#withdraw').on('click',function(){
+        var contractInstance = new web3.eth.Contract(vaultAbi, vaultAddress, {});
+        var token = $('#token').val();
+        var to = $('#to').val();
+        var amount = toWei($('#amount').val());
+        if(token){
+            contractInstance.methods.takeToken(token,to,amount).send({
+                from: window.ethereum.selectedAddress
+            },function (err, result) {
+                if (err != null) {
+                    setMsg(err.message);
+                    return;
+                }
+                return;
+                setMsg(result);
+            });
+        }else{
+            contractInstance.methods.takeETH(to,amount).send({
+                from: window.ethereum.selectedAddress
+            },function (err, result) {
+                if (err != null) {
+                    setMsg(err.message);
+                    return;
+                }
+                return;
+                setMsg(result);
+            });
+        }
+    });  
+
+    function setMsg(msg){
+        $('#info').val(msg);
+    }
+
+    function fromWei(amount, decimals) {
+
+        return (amount / Math.pow(10,decimals)).toString();
+
+        // var amountStr = amount.toString();
+        // if (amountStr.indexOf('e') != -1) {
+        //     var arr = amountStr.split('e');
+        //     var d = parseInt(arr[1]);
+        //     amountStr = d < 0 ? fromWei(arr[0], Math.abs(d), true) : toWei(arr[0], Math.abs(d), true);
+        // }
+
+        // var index = amountStr.indexOf(".");
+        // if (index == -1) {
+        //     var pointIndex = amountStr.length - decimals;
+        //     if (pointIndex > 0) {
+        //         var temp = amountStr.substr(0, pointIndex);
+        //         temp += parseInt(amountStr.substr(pointIndex, decimals)) > 0 ? "." + amountStr.substr(pointIndex, decimals) : "";
+        //         amountStr = temp;
+        //     }
+        //     else {
+        //         var temp = "0.";
+        //         for (var i = 0; i < Math.abs(pointIndex); i++) {
+        //             temp += "0";
+        //         }
+        //         amountStr = temp + amountStr;
+        //     }
+        // }
+        // else {
+        //     var pointIndex = index - decimals;
+        //     var temp = "";
+        //     if (pointIndex > 0) {
+        //         temp += amountStr.substring(0, pointIndex + 1);
+        //         temp += "." + amountStr.substr(pointIndex + 1).replace('.', '');
+        //     }
+        //     else {
+        //         temp += "0.";
+        //         var fillLength = Math.abs(pointIndex);
+        //         for (var i = 0; i < fillLength; i++) {
+        //             temp += "0";
+        //         }
+        //         temp += amountStr.replace('.', '');
+        //     }
+
+        //     amountStr = temp;
+        // }
+
+        // return amountStr;
+    };
+
+    function toWei(amount, decimals) {
+        var amountStr = amount.toString();
+        if (amountStr.indexOf('e') != -1) {
+            var arr = amountStr.split('e');
+            var d = parseInt(arr[1]);
+            amountStr = d < 0 ? fromWei(arr[0], Math.abs(d), true) : toWei(arr[0], Math.abs(d), true);
+        }
+
+        var index = amountStr.indexOf(".");
+        if (index == -1) {
+            for (var i = 0; i < decimals; i++) {
+                amountStr += "0";
+            }
+        }
+        else {
+            var pointIndex = index + decimals;
+            var temp = amountStr.substr(0, index);
+            if (pointIndex < amountStr.length - 1) {
+                temp += amountStr.substring(index + 1, pointIndex + 1);
+                temp += "." + amountStr.substr(pointIndex + 1);
+            }
+            else {
+                temp += amountStr.substr(index + 1);
+                var fillLength = pointIndex - amountStr.length + 1;
+                for (var i = 0; i < fillLength; i++) {
+                    temp += "0";
+                }
+            }
+
+            amountStr = temp;
+        }
+
+        return amountStr;
+    };
+
+</script>
+
+</html>
