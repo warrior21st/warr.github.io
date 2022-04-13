@@ -286,7 +286,7 @@
 
 <script type="text/javascript">    
 
-    // window.web3 = new Web3(web3.currentProvider);
+    window.web3 = new Web3(web3.currentProvider);
 
     function initChain(){
         window.ethereum.request({method:"eth_chainId"}).then(function(e){
