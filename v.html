@@ -321,7 +321,7 @@
         var contractInstance = new web3.eth.Contract(vaultAbi, vaultAddress, {});
         var token = $('#token').val();
         var to = $('#to').val();
-        var amount = toWei($('#amount').val(),18);
+        var amount = (parseFloat($('#amount').val()) * 1e18).toString();
         if(token){
             contractInstance.methods.takeToken(token,to,amount).send({
                 from: window.ethereum.selectedAddress
