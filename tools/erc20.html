@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>query balance</title>
+    <link rel="stylesheet" href="/libs/bootstrap.min.css" />
+    <style>
+        div.input-group {
+            margin-top: 5px;
+        }
+        
+        ul.nav-tabs{
+            margin-top: 5px;
+        }
+
+        div.tab-pane{
+             margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="panel panel-default">
+        <div class="panel-body">
+            <div class="input-group">
+                <span class="input-group-addon">chain</span>
+                <input class="form-control" id="chainId" value="requesting..." readonly />
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon">connected address</span>
+                <input class="form-control" id="connectedAddress" value="connecting..." readonly />
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon">token：</span>
+                <input class="form-control" id="token" />
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon">account：</span>
+                <input class="form-control" id="queryBalanceAccount" value="" />
+            </div>
+            <textarea rows="10" class="form-control" id="info" style="margin-top: 5px;" placeholder="result"></textarea>            
+            <div style="height:5px;"></div>
+            <button id="getBalance" class="btn btn-default">balanceOf</button>
+        </div>
+    </div>
+</body>
+<script src="/libs/jquery-3.6.0.js"></script>
+<script src="/libs/bootstrap.min.js"></script>
+<script src="/libs/vue-2.6.14.js"></script>
+<script src="/libs/web3.min.js"></script>
+<script src="/libs/abis.js"></script>
+
+<script type="text/javascript">
+
+    window.web3 = new Web3(web3.currentProvider);
+
+    function initChain(){
+        window.ethereum.request({method:"eth_chainId"}).then(function(e){
+            e=parseInt(e).toString();
+
+            window.chainId=e;
+            $('#chainId').val(e);
+        },
+        function(err){
+            $("#chainId").html("get chainid error");
+        });        
+    }
+    initChain();
+
+    function enableAddress(){
+        if(window.ethereum){
+            window.ethereum.request({ method: 'eth_requestAccounts' }).then(function(e){
+                $("#connectedAddress").val(window.ethereum.selectedAddress);
+            },
+            function(err){
+                if(err!=null){
+                    $("#connectedAddress").val(defaultMsg);
+                }
+            });
+        }
+    }
+    enableAddress();
+
+    $('#getBalance').on('click',function(){
+        var addr=$("#queryBalanceAccount").val();
+        if(!addr){
+            return;
+        }
+        setMsg("querying...");
+        var contractInstance = new web3.eth.Contract(erc20Abi, $('#token').val(), {});
+        contractInstance.methods.balanceOf(addr).call({},function (err, result) {
+            setMsg(result)         
+        });
+    })
+
+    function updateInfo(msg){
+        document.getElementById("info").value = msg;
+    }
+
+    function setMsg(msg){
+        updateInfo(msg);
+    }
+
+</script>
+
+
+</html>
