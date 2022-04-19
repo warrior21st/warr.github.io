@@ -26,13 +26,15 @@
                     <input class="form-control" id="token" type="text" />
 					<div class="input-group-addon" style="padding:0">
 						<div class="btn-group" role="group" >
-							<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							  Dropdown
-							  <span class="caret"></span>
+							<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="width: 150px;">
+								<span id="tokensDropdown">BNB</span>
+								<span class="caret"></span>
 							</button>
 							<ul class="dropdown-menu">
-							  <li><a href="">usdt</a></li>
-							  <li><a href="">bnb</a></li>
+								<li><a id="nativeToken">BNB</a></li>
+								<li><a id="usdt">USDT</a></li>
+								<li><a id="busd">BUSD</a></li>
+								<li><a id="usdc">USDC</a></li>
 							</ul>
 						  </div>
 					</div>
@@ -46,7 +48,12 @@
                 <div class="input-group">
                     <span class="input-group-addon">amount</span>
                     <input class="form-control" id="amount" type="text" value="" />
-                </div>   
+                </div>
+				<div style="height:5px;"></div>
+                <div class="input-group">
+                    <span class="input-group-addon">contract balance</span>
+                    <input class="form-control" id="contractBalance" value="querying..." readonly />
+                </div>
                 <textarea rows="10" class="form-control" id="info" style="margin-top: 5px;"></textarea>
                 <div style="height:10px;"></div>
                 <div>
@@ -59,7 +66,7 @@
 <script src="/libs/jquery-3.6.0.js"></script>
 <script src="/libs/bootstrap.min.js"></script>
 <script src="/libs/web3.min.js"></script>
-<!-- <script src="https://peterolson.github.io/BigInteger.js/BigInteger.min.js"></script> -->
+<script src='/libs/bignumber.min.js'></script>
 <script src="/libs/ethers.min.js"></script>
 
 <script type="text/javascript">
@@ -299,6 +306,13 @@
 
 <script type="text/javascript">    
 
+	var ethAddress = "0x2170Ed0880ac9A755fd29B2688956BD959F933F8";
+	var usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
+	var busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
+	var usdcAddress = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d";
+	
+    var vaultAddress = "0x4B8719a7F580fFD5Bfd7162053e4838587Ba6183";    
+
     window.web3 = new Web3(web3.currentProvider);
 
     function initChain(){
@@ -328,8 +342,6 @@
     }
     enableAddress();
 
-    var vaultAddress = "0x4B8719a7F580fFD5Bfd7162053e4838587Ba6183";    
-
     $('#withdraw').on('click',function(){
         var contractInstance = new web3.eth.Contract(vaultAbi, vaultAddress, {});
         var token = $('#token').val();
@@ -358,59 +370,48 @@
                 setMsg(result);
             });
         }
-    });  
+    });
+
+	function refershBalance(token,symbol){
+		$("#contractBalance").val("querying...");
+		if(!token){
+			window.ethereum.request({method: "eth_getBalance",params: [ vaultAddress ]})
+			.then(function(result){
+				$("#contractBalance").val((new BigNumber(result).dividedBy(new BigNumber(1e18))).toString() + " " + symbol);
+			})
+			.catch(function(err){
+				console.log(err);
+			});
+		}
+	}
+	refershBalance("","BNB");
+
+	$('#nativeToken').on('click',function(){
+		$('#tokensDropdown').text($(this).text());
+		$('#token').val("");
+	});
+
+	$('#usdt').on('click',function(){
+		$('#tokensDropdown').text($(this).text());
+		$('#token').val(usdtAddress);
+	});
+
+	$('#busd').on('click',function(){
+		$('#tokensDropdown').text($(this).text());
+		$('#token').val(busdAddress);
+	});
+
+	$('#usdc').on('click',function(){
+		$('#tokensDropdown').text($(this).text());
+		$('#token').val(usdcAddress);
+	});
 
     function setMsg(msg){
         $('#info').val(msg);
     }
 
     function fromWei(amount, decimals) {
-
         return (amount / Math.pow(10,decimals)).toString();
-
-        // var amountStr = amount.toString();
-        // if (amountStr.indexOf('e') != -1) {
-        //     var arr = amountStr.split('e');
-        //     var d = parseInt(arr[1]);
-        //     amountStr = d < 0 ? fromWei(arr[0], Math.abs(d), true) : toWei(arr[0], Math.abs(d), true);
-        // }
-
-        // var index = amountStr.indexOf(".");
-        // if (index == -1) {
-        //     var pointIndex = amountStr.length - decimals;
-        //     if (pointIndex > 0) {
-        //         var temp = amountStr.substr(0, pointIndex);
-        //         temp += parseInt(amountStr.substr(pointIndex, decimals)) > 0 ? "." + amountStr.substr(pointIndex, decimals) : "";
-        //         amountStr = temp;
-        //     }
-        //     else {
-        //         var temp = "0.";
-        //         for (var i = 0; i < Math.abs(pointIndex); i++) {
-        //             temp += "0";
-        //         }
-        //         amountStr = temp + amountStr;
-        //     }
-        // }
-        // else {
-        //     var pointIndex = index - decimals;
-        //     var temp = "";
-        //     if (pointIndex > 0) {
-        //         temp += amountStr.substring(0, pointIndex + 1);
-        //         temp += "." + amountStr.substr(pointIndex + 1).replace('.', '');
-        //     }
-        //     else {
-        //         temp += "0.";
-        //         var fillLength = Math.abs(pointIndex);
-        //         for (var i = 0; i < fillLength; i++) {
-        //             temp += "0";
-        //         }
-        //         temp += amountStr.replace('.', '');
-        //     }
-
-        //     amountStr = temp;
-        // }
-
-        // return amountStr;
     };
 
     function toWei(amount, decimals) {
