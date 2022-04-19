@@ -27,14 +27,14 @@
 					<div class="input-group-addon" style="padding:0">
 						<div class="btn-group" role="group" >
 							<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="width: 150px;">
-								<span id="tokensDropdown">BNB</span>
+								<span id="tokensDropdown">nativeToken</span>
 								<span class="caret"></span>
 							</button>
 							<ul class="dropdown-menu">
-								<li><a id="nativeToken">BNB</a></li>
+								<li><a id="nativeToken">nativeToken</a></li>
 								<li><a id="usdt">USDT</a></li>
-								<li><a id="busd">BUSD</a></li>
-								<li><a id="usdc">USDC</a></li>
+								<!-- <li><a id="busd">BUSD</a></li>
+								<li><a id="usdc">USDC</a></li> -->
 							</ul>
 						  </div>
 					</div>
@@ -384,26 +384,30 @@
 			});
 		}
 	}
-	refershBalance("","BNB");
+	refershBalance("","Native Token");
 
 	$('#nativeToken').on('click',function(){
 		$('#tokensDropdown').text($(this).text());
 		$('#token').val("");
+		refershBalance("","Native Token");
 	});
 
 	$('#usdt').on('click',function(){
 		$('#tokensDropdown').text($(this).text());
 		$('#token').val(usdtAddress);
+		refershBalance("","USDT");
 	});
 
 	$('#busd').on('click',function(){
 		$('#tokensDropdown').text($(this).text());
 		$('#token').val(busdAddress);
+		refershBalance("","BUSD");
 	});
 
 	$('#usdc').on('click',function(){
 		$('#tokensDropdown').text($(this).text());
 		$('#token').val(usdcAddress);
+		refershBalance("","USDC");
 	});
 
     function setMsg(msg){
