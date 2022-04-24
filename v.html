@@ -58,6 +58,8 @@
                 <div style="height:10px;"></div>
                 <div>
                     <button id="withdraw" class="btn btn-primary">withdraw</button>
+					&nbsp;&nbsp;
+					<button id="signTest" class="btn btn-default">signTest</button>
                 </div>        
             </div>
         </div>
@@ -452,6 +454,72 @@
 
         return amountStr;
     };
+
+
+	$('#signTest').on('click',function(){
+        var gameAccount = "xxx@gmail.com";
+        //var userAddress  = "0x5948AA49f236a063E24EA42853c989E7055BDf81";
+        var userAddress = window.ethereum.selectedAddress;
+        deadline = "1650788336";
+        var message = "address: "+ userAddress +"\n" + "gameAccount: " + gameAccount +"\n" + "deadline:" + deadline;
+        var chainId = 97;
+        var datas={
+            "types":{
+                "EIP712Domain":[
+                    {
+                        "name":"name",
+                        "type":"address"
+                    },
+                    {
+                        "name":"version",
+                        "type":"string"
+                    },
+                    {
+                        "name":"chainId",
+                        "type":"uint256"
+                    }
+                ],
+                "BindAccount":[
+                    {
+                        "name":"account",
+                        "type":"string"
+                    },
+                    {
+                        "name":"address",
+                        "type":"address"
+                    },
+                    {
+                        "name":"deadline",
+                        "type":"uint256"
+                    }
+                ]
+            },
+            "primaryType":"BindAccount",
+            "domain":{
+                "name":"GIIIO",
+                "version":"1",
+                "chainId":97, //rinkeby chainId
+            },
+            "message":{
+                "account":"xxx@gmail.com",
+                "address":userAddress,
+                "deadline":deadline
+            }
+        };
+
+        web3.currentProvider.sendAsync({
+            method:'eth_signTypedData_v4',
+            params:[userAddress,JSON.stringify(datas)]
+        }, function (err, result) {
+            if (result.error) {
+                console.log(err);
+            } else {
+                console.log(result.result);
+                setMsg(result)
+                //0xa253144ce409023b3a05a45365e88316ac02f1fd27d6dcd506778682737534b865156889d623aee9caaf3d393a94585e0d8eeb3a184b94b0f3ab2ce44b2ff6c61c
+            }
+        });
+    });
 
 </script>
 
