@@ -330,15 +330,22 @@
     }
     initChain();
 
-    function enableAddress(){
-		window.ethereum.request({ method: 'eth_requestAccounts' }).then(function(e){
-			$("#connectedAddress").val(window.ethereum.selectedAddress);
+	async function getAccounts() {
+		return await window.ethereum.request({ method: "eth_accounts"});
+	}
+
+    async function enableAddress(){
+		window.ethereum.request({ method: 'eth_requestAccounts' }).then(async function(e){
+			// alert(window.ethereum.address);
+			var accounts = await getAccounts();
+			$("#connectedAddress").val(accounts[0]);
 		},
 		function(err){
 			if(err!=null){
 				$("#connectedAddress").val(JSON.stringify(err));
 			}
 		});
+
     }
     enableAddress();
 
@@ -419,14 +426,8 @@
 	});
 	
 
-	$('#signTest').on('click',function(){
-        var gameAccount = "xxx@gmail.com";
-        //var userAddress  = "0x5948AA49f236a063E24EA42853c989E7055BDf81";
-        var userAddress = window.ethereum.selectedAddress;
-        deadline = "1650788336";
-        var message = "address: "+ userAddress +"\n" + "gameAccount: " + gameAccount +"\n" + "deadline:" + deadline;
-        var chainId = 56;
-        var datas={
+	async function signBindAccount(chainId,gameAccount,userAddress,deadline,callback){
+        var datas = {
             "types":{
                 "EIP712Domain":[
                     {
@@ -464,7 +465,7 @@
                 "chainId":chainId, //rinkeby chainId
             },
             "message":{
-                "account":"xxx@gmail.com",
+                "account":gameAccount,
                 "address":userAddress,
                 "deadline":deadline
             }
@@ -473,15 +474,37 @@
         web3.currentProvider.sendAsync({
             method:'eth_signTypedData_v4',
             params:[userAddress,JSON.stringify(datas)]
-        }, function (err, result) {
-            if (result.error) {
-                console.log(err);
-            } else {
-                console.log(result.result);
-                setMsg(result.result)
-                //0xa253144ce409023b3a05a45365e88316ac02f1fd27d6dcd506778682737534b865156889d623aee9caaf3d393a94585e0d8eeb3a184b94b0f3ab2ce44b2ff6c61c
-            }
-        });
+        }, function (err,result) {
+			if(err){
+				callback(err,result);
+			}
+
+			result.result = result.result.substr(2,130);
+			var obj = {
+				r:"0x"+ result.result.substr(0,64),
+				s:"0x"+ result.result.substr(64,64),
+				v:"0x"+ result.result.substr(128,2)
+			}
+
+			callback(err,obj);
+        });		
+	}
+
+	$('#signTest').on('click',async function(){
+        var gameAccount = "xxx@gmail.com";
+		var accounts = await window.ethereum.request({ method: "eth_accounts"});
+        var userAddress = accounts[0];
+        var deadline = "1650788336";
+        var message = "address: "+ userAddress +"\n" + "gameAccount: " + gameAccount +"\n" + "deadline:" + deadline;
+        var chainId = await ethereum.request({method:"eth_chainId"});
+        
+		signBindAccount(chainId,gameAccount,userAddress,deadline,function(err,result){
+			if(err){
+				console.log(err);
+			}else{
+				setMsg(JSON.stringify(result));
+			}
+		});
     });
 
 </script>
