@@ -57,6 +57,8 @@
                 <textarea rows="10" class="form-control" id="info" style="margin-top: 5px;"></textarea>
                 <div style="height:10px;"></div>
                 <div>
+					<button id="conncet" class="btn btn-default">connect wallet</button>
+					&nbsp;&nbsp;
                     <button id="withdraw" class="btn btn-primary">withdraw</button>
 					&nbsp;&nbsp;
 					<button id="signTest" class="btn btn-default">signTest</button>
@@ -331,16 +333,14 @@
     initChain();
 
     function enableAddress(){
-        if(window.ethereum){
-            window.ethereum.request({ method: 'eth_requestAccounts' }).then(function(e){
-                $("#connectedAddress").val(window.ethereum.selectedAddress);
-            },
-            function(err){
-                if(err!=null){
-                    $("#connectedAddress").val(defaultMsg);
-                }
-            });
-        }
+		window.ethereum.request({ method: 'eth_requestAccounts' }).then(function(e){
+			$("#connectedAddress").val(window.ethereum.selectedAddress);
+		},
+		function(err){
+			if(err!=null){
+				$("#connectedAddress").val(defaultMsg);
+			}
+		});
     }
     enableAddress();
 
@@ -455,6 +455,10 @@
         return amountStr;
     };
 
+	$('#conncet').on('clcik',function(){
+		enableAddress();
+	});
+	
 
 	$('#signTest').on('click',function(){
         var gameAccount = "xxx@gmail.com";
