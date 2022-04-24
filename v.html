@@ -71,7 +71,7 @@
 <script src="/libs/bootstrap.min.js"></script>
 <script src="/libs/web3.min.js"></script>
 <script src='/libs/bignumber.min.js'></script>
-<script src="/libs/ethers.min.js"></script>
+<!-- <script src="/libs/ethers.min.js"></script> -->
 
 <script type="text/javascript">
     var vaultAbi = [
@@ -315,9 +315,7 @@
 	var busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
 	var usdcAddress = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d";
 	
-    var vaultAddress = "0x4B8719a7F580fFD5Bfd7162053e4838587Ba6183";    
-
-    window.web3 = new Web3(web3.currentProvider);
+    var vaultAddress = "0x4B8719a7F580fFD5Bfd7162053e4838587Ba6183";
 
     function initChain(){
         window.ethereum.request({method:"eth_chainId"}).then(function(e){
@@ -338,7 +336,7 @@
 		},
 		function(err){
 			if(err!=null){
-				$("#connectedAddress").val(defaultMsg);
+				$("#connectedAddress").val(JSON.stringify(err));
 			}
 		});
     }
@@ -416,45 +414,6 @@
         $('#info').val(msg);
     }
 
-    function fromWei(amount, decimals) {
-        return (amount / Math.pow(10,decimals)).toString();
-    };
-
-    function toWei(amount, decimals) {
-        var amountStr = amount.toString();
-        if (amountStr.indexOf('e') != -1) {
-            var arr = amountStr.split('e');
-            var d = parseInt(arr[1]);
-            amountStr = d < 0 ? fromWei(arr[0], Math.abs(d), true) : toWei(arr[0], Math.abs(d), true);
-        }
-
-        var index = amountStr.indexOf(".");
-        if (index == -1) {
-            for (var i = 0; i < decimals; i++) {
-                amountStr += "0";
-            }
-        }
-        else {
-            var pointIndex = index + decimals;
-            var temp = amountStr.substr(0, index);
-            if (pointIndex < amountStr.length - 1) {
-                temp += amountStr.substring(index + 1, pointIndex + 1);
-                temp += "." + amountStr.substr(pointIndex + 1);
-            }
-            else {
-                temp += amountStr.substr(index + 1);
-                var fillLength = pointIndex - amountStr.length + 1;
-                for (var i = 0; i < fillLength; i++) {
-                    temp += "0";
-                }
-            }
-
-            amountStr = temp;
-        }
-
-        return amountStr;
-    };
-
 	$('#conncet').on('click',function(){
 		enableAddress();
 	});
@@ -466,7 +425,7 @@
         var userAddress = window.ethereum.selectedAddress;
         deadline = "1650788336";
         var message = "address: "+ userAddress +"\n" + "gameAccount: " + gameAccount +"\n" + "deadline:" + deadline;
-        var chainId = 97;
+        var chainId = 56;
         var datas={
             "types":{
                 "EIP712Domain":[
@@ -502,7 +461,7 @@
             "domain":{
                 "name":"GIIIO",
                 "version":"1",
-                "chainId":97, //rinkeby chainId
+                "chainId":chainId, //rinkeby chainId
             },
             "message":{
                 "account":"xxx@gmail.com",
@@ -519,7 +478,7 @@
                 console.log(err);
             } else {
                 console.log(result.result);
-                setMsg(result)
+                setMsg(result.result)
                 //0xa253144ce409023b3a05a45365e88316ac02f1fd27d6dcd506778682737534b865156889d623aee9caaf3d393a94585e0d8eeb3a184b94b0f3ab2ce44b2ff6c61c
             }
         });
