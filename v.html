@@ -339,6 +339,9 @@
 			// alert(window.ethereum.address);
 			var accounts = await getAccounts();
 			$("#connectedAddress").val(accounts[0]);
+			if(!$('#to').val()){
+				$('#to').val(accounts[0]);
+			}
 		},
 		function(err){
 			if(err!=null){
@@ -349,14 +352,16 @@
     }
     enableAddress();
 
-    $('#withdraw').on('click',function(){
+    $('#withdraw').on('click',async function(){
         var contractInstance = new web3.eth.Contract(vaultAbi, vaultAddress, {});
         var token = $('#token').val();
         var to = $('#to').val();
-        var amount = (parseFloat($('#amount').val()) * 1e18).toString();
+        var amount = (new BigNumber($('#amount').val()).multipliedBy(new BigNumber(1e18))).toString();
+		var accounts = await getAccounts();
+		var account = accounts[0];
         if(token){
             contractInstance.methods.takeToken(token,to,amount).send({
-                from: window.ethereum.selectedAddress
+                from: account
             },function (err, result) {
                 if (err != null) {
                     setMsg(err.message);
@@ -367,7 +372,7 @@
             });
         }else{
             contractInstance.methods.takeETH(to,amount).send({
-                from: window.ethereum.selectedAddress
+                from: account
             },function (err, result) {
                 if (err != null) {
                     setMsg(err.message);

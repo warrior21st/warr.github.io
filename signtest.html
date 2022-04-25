@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>v</title>
+    <title>sign test</title>
     <link rel="stylesheet" href="./libs/bootstrap.min.css" />
 </head>
 <body>
@@ -25,7 +25,7 @@
                 <div style="height:10px;"></div>
                 <div>
 					<button id="conncet" class="btn btn-default">connect wallet</button>
-					<button id="signTest" class="btn btn-default">signTest</button>
+					<button id="eip712-signTest" class="btn btn-default">eip712 signTest</button>
                 </div>        
             </div>
         </div>
@@ -139,7 +139,7 @@
         });		
 	}
 
-	$('#signTest').on('click',async function(){
+	$('#eip712-signTest').on('click',async function(){
         var gameAccount = "xxx@gmail.com";
 		var accounts = await window.ethereum.request({ method: "eth_accounts"});
         var userAddress = accounts[0];
