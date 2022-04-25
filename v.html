@@ -61,7 +61,7 @@
 					&nbsp;&nbsp;
                     <button id="withdraw" class="btn btn-primary">withdraw</button>
 					&nbsp;&nbsp;
-					<button id="signTest" class="btn btn-default">signTest</button>
+					<!-- <button id="signTest" class="btn btn-default">signTest</button> -->
                 </div>        
             </div>
         </div>
@@ -432,10 +432,6 @@
                 "EIP712Domain":[
                     {
                         "name":"name",
-                        "type":"address"
-                    },
-                    {
-                        "name":"version",
                         "type":"string"
                     },
                     {
@@ -449,7 +445,7 @@
                         "type":"string"
                     },
                     {
-                        "name":"address",
+                        "name":"userAddress",
                         "type":"address"
                     },
                     {
@@ -461,12 +457,11 @@
             "primaryType":"BindAccount",
             "domain":{
                 "name":"GIIIO",
-                "version":"1",
-                "chainId":chainId, //rinkeby chainId
+                "chainId":chainId,
             },
             "message":{
                 "account":gameAccount,
-                "address":userAddress,
+                "userAddress":userAddress,
                 "deadline":deadline
             }
         };
