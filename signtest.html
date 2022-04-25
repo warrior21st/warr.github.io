@@ -25,9 +25,6 @@
                 <div style="height:10px;"></div>
                 <div>
 					<button id="conncet" class="btn btn-default">connect wallet</button>
-					&nbsp;&nbsp;
-                    <button id="withdraw" class="btn btn-primary">withdraw</button>
-					&nbsp;&nbsp;
 					<button id="signTest" class="btn btn-default">signTest</button>
                 </div>        
             </div>
@@ -37,17 +34,10 @@
 <script src="/libs/jquery-3.6.0.js"></script>
 <script src="/libs/bootstrap.min.js"></script>
 <script src="/libs/web3.min.js"></script>
-<script src='/libs/bignumber.min.js'></script>
+<!-- <script src='/libs/bignumber.min.js'></script> -->
 <!-- <script src="/libs/ethers.min.js"></script> -->
 
-<script type="text/javascript">    
-
-	var ethAddress = "0x2170Ed0880ac9A755fd29B2688956BD959F933F8";
-	var usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
-	var busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
-	var usdcAddress = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d";
-	
-    var vaultAddress = "0x4B8719a7F580fFD5Bfd7162053e4838587Ba6183";
+<script type="text/javascript">
 
     function initChain(){
         window.ethereum.request({method:"eth_chainId"}).then(function(e){
@@ -96,10 +86,6 @@
                 "EIP712Domain":[
                     {
                         "name":"name",
-                        "type":"address"
-                    },
-                    {
-                        "name":"version",
                         "type":"string"
                     },
                     {
@@ -113,7 +99,7 @@
                         "type":"string"
                     },
                     {
-                        "name":"address",
+                        "name":"userAddress",
                         "type":"address"
                     },
                     {
@@ -125,12 +111,11 @@
             "primaryType":"BindAccount",
             "domain":{
                 "name":"GIIIO",
-                "version":"1",
-                "chainId":chainId, //rinkeby chainId
+                "chainId":chainId,
             },
             "message":{
                 "account":gameAccount,
-                "address":userAddress,
+                "userAddress":userAddress,
                 "deadline":deadline
             }
         };
