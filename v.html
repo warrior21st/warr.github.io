@@ -317,6 +317,8 @@
 	
     var vaultAddress = "0x4B8719a7F580fFD5Bfd7162053e4838587Ba6183";
 
+	var web3 = new Web3(web3.currentProvider);
+
     function initChain(){
         window.ethereum.request({method:"eth_chainId"}).then(function(e){
             e=parseInt(e).toString();
