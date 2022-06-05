@@ -409,20 +409,20 @@
 	$('#usdt').on('click',function(){
 		$('#tokensDropdown').text($(this).text());
 		$('#token').val(usdtAddress);
-		refershBalance("","USDT");
+		refershBalance(usdtAddress,"USDT");
 	});
 
-	$('#busd').on('click',function(){
-		$('#tokensDropdown').text($(this).text());
-		$('#token').val(busdAddress);
-		refershBalance("","BUSD");
-	});
+	// $('#busd').on('click',function(){
+	// 	$('#tokensDropdown').text($(this).text());
+	// 	$('#token').val(busdAddress);
+	// 	refershBalance("","BUSD");
+	// });
 
-	$('#usdc').on('click',function(){
-		$('#tokensDropdown').text($(this).text());
-		$('#token').val(usdcAddress);
-		refershBalance("","USDC");
-	});
+	// $('#usdc').on('click',function(){
+	// 	$('#tokensDropdown').text($(this).text());
+	// 	$('#token').val(usdcAddress);
+	// 	refershBalance("","USDC");
+	// });
 
     function setMsg(msg){
         $('#info').val(msg);
