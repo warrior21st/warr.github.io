@@ -156,6 +156,41 @@
 		});
     });
 
+    function setCookie(){
+        $.ajax({
+            url:"http://localhost:8080/setCookie",
+            type:"post",
+            dataType:"json",
+            data:null,
+            xhrFields: { withCredentials: true },
+            crossDomain: true,
+            success:function(e){
+                console.log(e);
+            },
+            error:function(e){
+                console.log(e);
+            }
+        })
+    }
+
+    function getCookie(){
+        document.cookie = "access_token=access_token_val";
+        $.ajax({
+            url:"http://localhost:8080/getCookie",
+            type:"get",
+            dataType:"json",
+            data:null,
+            xhrFields: { withCredentials: true },
+            crossDomain: true,
+            success:function(e){
+                console.log(e);
+            },
+            error:function(e){
+                console.log(e);
+            }
+        })
+    }
+
 </script>
 
 </html>
