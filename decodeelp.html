@@ -10,9 +10,7 @@
     <div id="app" class="panel panel-default">
         <div class="panel-body">          
 
-            <textarea rows="20" class="form-control" id="inputInfo" style="margin-top: 5px;"></textarea>
-            <hr />
-            <textarea rows="20" class="form-control" id="outputInfo" style="margin-top: 5px;"></textarea>
+            <textarea rows="20" class="form-control" id="info" style="margin-top: 5px;"></textarea>
             <div style="height:10px;"></div>
             <div>
                 <button id="format" class="btn btn-primary">format</button>
@@ -36,7 +34,7 @@
 
         var result = "";
         result += inputData.toLowerCase().startsWith("0x") ? inputData.substr(0,10) + "\n" :  inputData.substr(0,8) + "\n";
-        inputData = inputData.toLowerCase().startsWith("0x") ? inputData.substr(10) : inputData.substr(8);
+        inputData= inputData.toLowerCase().startsWith("0x") ? inputData.substr(10) : inputData.substr(8);
         for(var i=0;i<inputData.length;i+=64){
             result+=inputData.substr(i,64) + "\n";
         }
@@ -62,7 +60,7 @@
 
 
     function setMsg(msg){
-        $('#outputInfo').val(msg);
+        $('#info').val(msg);
     }    
 
 </script>
