@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>ipfs gateways</title>
+    <link rel="stylesheet" href="./libs/bootstrap.min.css" />
+</head>
+<body>
+    <div id="app" class="panel panel-default">
+        <div class="panel-body">          
+
+            <textarea rows="20" class="form-control" id="info" style="margin-top: 5px;" placeholder="input cid here"></textarea>
+            <div style="height:10px;"></div>
+            <div><label>open ipfs file with:</label> </div>
+            <div style="height:10px;"></div>
+            <div>
+                <button id="ipfs-io" class="btn btn-primary gateway-btn" gateway-prefix="ipfs.io/ipfs/">ipfs.io</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button id="deweb-link" class="btn btn-primary gateway-btn" gateway-prefix="dweb.link/ipfs/">dweb.link</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button id="web3Storage" class="btn btn-primary gateway-btn" gateway-prefix="ipfs.w3s.link/ipfs/">web3Storage</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button id="fleek" class="btn btn-primary gateway-btn" gateway-prefix="ipfs.fleek.co/ipfs/">fleek</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button id="cloudflare" class="btn btn-primary gateway-btn" gateway-prefix="cloudflare-ipfs.com/ipfs/">cloudflare</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button id="infura" class="btn btn-primary gateway-btn" gateway-prefix="infura-ipfs.io/ipfs/">infura</button>
+            </div>        
+        </div>
+    </div>
+</body>
+<script src="./libs/jquery-3.6.0.js"></script>
+<script src="./libs/bootstrap.min.js"></script>
+<!-- <script src="https://peterolson.github.io/BigInteger.js/BigInteger.min.js"></script> -->
+
+<script type="text/javascript">
+
+    $('.gateway-btn').on('click',function(){
+        var inputData = $('#info').val();
+        if(inputData.length == 0){
+            return;
+        }
+
+        var url ="https://" + $(this).attr("gateway-prefix") + inputData;
+        window.open(url)
+    });
+
+    function setMsg(msg){
+        $('#info').val(msg);
+    }    
+
+</script>
+
+</html>
