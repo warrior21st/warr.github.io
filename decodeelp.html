@@ -16,12 +16,17 @@
                 <button id="format" class="btn btn-primary">format</button>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <button id="formatOnly64" class="btn btn-primary">formatOnly64</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button id="calcTopic0" class="btn btn-primary">calcEventTopic0</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button id="calcMethodID" class="btn btn-primary">calcMethodID</button>
             </div>        
         </div>
     </div>
 </body>
 <script src="./libs/jquery-3.6.0.js"></script>
 <script src="./libs/bootstrap.min.js"></script>
+<script src="/libs/web3.min.js"></script>
 <!-- <script src="https://peterolson.github.io/BigInteger.js/BigInteger.min.js"></script> -->
 
 <script type="text/javascript">
@@ -57,7 +62,76 @@
         setMsg(result);
     });
 
+    $('#calcTopic0').on('click',function(){
+        var inputData = $('#info').val();
 
+        var result = "";
+        var definestr = inputData.trim();
+        definestr = definestr.replace("event ","")
+        definestr = definestr.replace(";","")
+        result = inputData;
+        firstIndex = definestr.indexOf("(")
+        lastIndex = definestr.lastIndexOf(")")
+
+        var eventstr = definestr.substring(0,firstIndex+1)
+        var paras = definestr.substring(firstIndex+1,lastIndex)
+
+        var arr = paras.split(',');
+        for(var i=0;i<arr.length;i++){
+            var para = arr[i].trim();
+            para = para.split(' ')[0].trim();
+            if(para == "uint"){
+                para = "uint256"
+            }
+
+            if(i > 0){
+                eventstr +=","
+            }
+            eventstr += para;
+        }
+        eventstr += ")";
+        result += "\n" + eventstr;
+
+        result += "\n" + Web3.utils.sha3(eventstr).substring(2)
+
+        setMsg(result);
+    })
+
+    $('#calcMethodID').on('click',function(){
+        var inputData = $('#info').val();
+
+        var result = "";
+        var definestr = inputData.trim();
+        definestr = definestr.replace("function ","")
+        definestr = definestr.replace("; ","")
+        result = inputData;
+        firstIndex = definestr.indexOf("(")
+        lastIndex = definestr.lastIndexOf(")")
+
+        var funcStr = definestr.substring(0,firstIndex+1)
+        console.log(funcStr)
+        var paras = definestr.substring(firstIndex+1,lastIndex)
+
+        var arr = paras.split(',');
+        for(var i=0;i<arr.length;i++){
+            var para = arr[i].trim();
+            para = para.split(' ')[0].trim();
+            if(para == "uint"){
+                para = "uint256"
+            }
+
+            if(i > 0){
+                funcStr +=","
+            }
+            funcStr += para;
+        }
+        funcStr += ")";
+        result += "\n" + funcStr;
+
+        result += "\n" + Web3.utils.sha3(funcStr).substring(2,10)
+
+        setMsg(result);
+    })
 
     function setMsg(msg){
         $('#info').val(msg);
