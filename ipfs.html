@@ -37,6 +37,9 @@
         if(inputData.length == 0){
             return;
         }
+        if(inputData.toLownerCase().startsWith("ipfs://")){
+            inputData = inputData.substring("ipfs://".length)
+        }
 
         var url ="https://" + $(this).attr("gateway-prefix") + inputData;
         window.open(url)
