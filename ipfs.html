@@ -37,7 +37,7 @@
         if(inputData.length == 0){
             return;
         }
-        if(inputData.toLownerCase().startsWith("ipfs://")){
+        if(inputData.toLowerCase().startsWith("ipfs://")){
             inputData = inputData.substring("ipfs://".length)
         }
 
