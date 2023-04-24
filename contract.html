@@ -43,6 +43,10 @@
                     <span class="input-group-addon">{{p.name}}</span>
                     <input class="form-control" :placeholder="p.type" :ref="item.name+'_'+index"/>
                 </div>
+                <div class="input-group" style="margin-top: 5px;" v-if="item.stateMutability == 'payable'">
+                    <span class="input-group-addon" style="color:#ffffff;background-color: #d9534f;">msg.value</span>
+                    <input class="form-control" placeholder="uint256" :ref="item.name+'_value'"/>
+                </div>
                 <button style="margin-top: 10px;" v-on:click="call(item)" :class="{'btn btn-default':item.stateMutability == 'view'||item.stateMutability == 'pure','btn btn-primary':!(item.stateMutability == 'view'||item.stateMutability == 'pure')}">
                     {{item.stateMutability == 'view' || item.stateMutability == 'pure' ? 'read':'write'}}
                 </button>
@@ -166,9 +170,13 @@
                     });
                     // $(resDom).html(result.toString());
                 }else{
-                    contractInstance.methods[item.name](...args).send({
+                    var sendObj = {
                         from:this.accountAddress
-                    },function(err,result){
+                    };
+                    if(item.stateMutability=="payable"){
+                        sendObj.value= $(this.$refs[item.name+"_value"]).val() || "0";
+                    }
+                    contractInstance.methods[item.name](...args).send(sendObj,function(err,result){
                         if(err){
                             $(resDom).html(err.message);
                         }else{
