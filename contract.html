@@ -43,10 +43,10 @@
                     <span class="input-group-addon">{{p.name}}</span>
                     <input class="form-control" :placeholder="p.type" :ref="item.name+'_'+index"/>
                 </div>
-                <button style="margin-top: 5px;" v-on:click="call(item)" :class="{'btn btn-default':item.stateMutability == 'view'||item.stateMutability == 'pure','btn btn-primary':!(item.stateMutability == 'view'||item.stateMutability == 'pure')}">
+                <button style="margin-top: 10px;" v-on:click="call(item)" :class="{'btn btn-default':item.stateMutability == 'view'||item.stateMutability == 'pure','btn btn-primary':!(item.stateMutability == 'view'||item.stateMutability == 'pure')}">
                     {{item.stateMutability == 'view' || item.stateMutability == 'pure' ? 'read':'write'}}
                 </button>
-                <span style="margin-left: 10px;" :ref="item.name+'_result'"></span>
+                <span style="margin-left: 10px;margin-top: 10px;" :ref="item.name+'_result'"></span>
                 <!-- <textarea rows="2" class="form-control" placeholder="result" style="margin-top: 5px;"></textarea> -->
             </div>
         </div>   
