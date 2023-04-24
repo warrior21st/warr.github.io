@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>test</title>
+    <link rel="stylesheet" href="./libs/bootstrap.min.css" />
+</head>
+<body>
+    <div id="app" class="container-fluid">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="input-group">
+                    <span class="input-group-addon">chain</span>
+                    <input class="form-control" id="chainId" value="requesting..." readonly />
+                </div>
+				<div style="height:5px;"></div>
+                <div class="input-group">
+                    <span class="input-group-addon">connected address</span>
+                    <input class="form-control" id="connectedAddress" value="connecting..." readonly />
+                </div>
+                <div style="height:5px;"></div>
+                <div class="input-group">
+                    <span class="input-group-addon">token</span>
+                    <input class="form-control" id="token" type="text" />
+					<div class="input-group-addon" style="padding:0">
+						<div class="btn-group" role="group" >
+							<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="width: 150px;">
+								<span id="tokensDropdown">NativeToken</span>
+								<span class="caret"></span>
+							</button>
+							<ul class="dropdown-menu">
+								<li><a id="nativeToken">NativeToken</a></li>
+								<li><a id="usdt">USDT</a></li>
+								<!-- <li><a id="busd">BUSD</a></li>
+								<li><a id="usdc">USDC</a></li> -->
+							</ul>
+						  </div>
+					</div>
+                </div>
+                <div style="height:5px;"></div>
+                <div class="input-group">
+                    <span class="input-group-addon">to</span>
+                    <input class="form-control" id="to" type="text" value="" />
+                </div>                
+                <div style="height:5px;"></div>
+                <div class="input-group">
+                    <span class="input-group-addon">amount</span>
+                    <input class="form-control" id="amount" type="text" value="" />
+                </div>
+				<div style="height:5px;"></div>
+                <div class="input-group">
+                    <span class="input-group-addon">contract balance</span>
+                    <input class="form-control" id="contractBalance" value="querying..." readonly />
+                </div>
+                <textarea rows="10" class="form-control" id="info" style="margin-top: 5px;"></textarea>
+                <div style="height:10px;"></div>
+                <div>
+                    <button id="testTuple" class="btn btn-primary">testTuple</button>
+					&nbsp;&nbsp;
+                    <button id="testRouter" class="btn btn-primary">testRouter</button>
+					&nbsp;&nbsp;
+                    <button id="testOpenBlockWallet" class="btn btn-primary">testOpenBlockWallet</button>
+					&nbsp;&nbsp;
+                </div>        
+            </div>
+        </div>
+    </div>
+</body>
+<script src="/libs/jquery-3.6.0.js"></script>
+<script src="/libs/bootstrap.min.js"></script>
+<script src="/libs/web3.min.js"></script>
+<script src='/libs/bignumber.min.js'></script>
+<!-- <script src="/libs/ethers.min.js"></script> -->
+<script src='/abis/test-tuple.js'></script>
+<script src='/abis/test-router.js'></script>
+<script src='/abis/syncswap-router.js'></script>
+
+<script src="bower_components/abi-decoder/dist/abi-decoder.js"></script>
+<script type="application/javascript" src="/libs/ethers-5.2.umd.min.js"></script>
+<script type="text/javascript" charset="UTF-8" src="https://obstatic.243096.com/download/dapp/sdk/index.js"></script>
+
+<script type="text/javascript">    
+	var web3 = new Web3(window.ethereum);
+
+    function initChain(){
+        window.ethereum.request({method:"eth_chainId"}).then(function(e){
+            e=parseInt(e).toString();
+
+            window.chainId=e;
+            $('#chainId').val(e);
+        },
+        function(err){
+            $("#chainId").html("get chainid error");
+        });        
+    }
+    initChain();
+
+	async function getAccounts() {
+		return await window.ethereum.request({ method: "eth_accounts"});
+	}
+
+    async function enableAddress(){
+		window.ethereum.request({ method: 'eth_requestAccounts' }).then(async function(e){
+			// alert(window.ethereum.address);
+			var accounts = await getAccounts();
+			$("#connectedAddress").val(accounts[0]);
+			if(!$('#to').val()){
+				$('#to').val(accounts[0]);
+			}
+		},
+		function(err){
+			if(err!=null){
+				$("#connectedAddress").val(JSON.stringify(err));
+			}
+		});
+
+    }
+    enableAddress();
+
+    $('#testTuple').on('click',async function(){
+        var testTupleAddress = "0xe80093DBAf734718FD4E012B48e529C782E8B3a3";
+        var contractInstance = new web3.eth.Contract(testTupleAbi, testTupleAddress, {});
+		var accounts = await getAccounts();
+		var account = accounts[0];
+        contractInstance.methods.testTest1({
+            "a":"5",
+            "b":"6"
+        }).send({from: account},function (err, result) {
+            if (err != null) {
+                setMsg(err.message);
+                return;
+            }
+            setMsg(result);
+        });
+    });
+
+    $('#testTuple').on('click',async function(){
+        var testTupleAddress = "0xe80093DBAf734718FD4E012B48e529C782E8B3a3";
+        var contractInstance = new web3.eth.Contract(testTupleAbi, testTupleAddress, {});
+		var accounts = await getAccounts();
+		var account = accounts[0];
+        contractInstance.methods.testTest1({
+            "a":"5",
+            "b":"6"
+        }).send({from: account},function (err, result) {
+            if (err != null) {
+                setMsg(err.message);
+                return;
+            }
+            setMsg(result);
+        });
+    });
+
+    $('#testOpenBlockWallet').on('click',async function(){
+        let provider = Object.create(window.openblock);
+        provider = Object.create(window.openblock);
+        var ethersProvider = new ethers.providers.Web3Provider(provider, 'any');
+        await provider.request({
+            method: 'wallet_switchEthereumChain',
+            params: [
+                {
+                    chainId:"97",
+                }
+            ]
+        });
+
+        // const accounts = await provider.request({
+        //     method: 'eth_requestAccounts',
+        // });
+
+        // const result = await openblock.request({
+        //     id: 1,
+        //     "method": "eth_sendTransaction",
+        //     "params": [
+        //         {
+        //             from: accounts[0],
+        //             to: '0x0c54FcCd2e384b4BB6f2E405Bf5Cbc15a017AaFb',
+        //             value: '0x0',
+        //             gasLimit: '0x5028',
+        //             gasPrice: '0x2540be400',
+        //             type: '0x1',
+        //         },
+        //     ],
+        // });
+        // console.log(result);
+        // setMsg(result);
+    });
+
+
+    function setMsg(msg){
+        $('#info').val(msg);
+    }
+
+	$('#conncet').on('click',function(){
+		enableAddress();
+	});
+
+    function testSwapRk(){
+        var total = 100000000;
+        var rk = 20100;
+        var rkl = 20000;
+        var fd = 8;
+
+        console.log(calcSwapRk1(total,rk,rkl,fd));
+        console.log(calcSwapRk2(total,rk,rkl,fd));
+    }
+
+    function calcSwapRk1(total,rk,rkl,fd){
+       var res = total * (rk - rkl)  / (rk * fd + rkl);
+       return res;
+    }
+
+    function calcSwapRk2(total,rk,rkl,fd) {
+        var pfn = 1/(fd+1) * 10000;
+        var res = total * (rk - rkl) * pfn / (rk * (10000-pfn) + rkl * pfn);
+
+        return res;
+    }
+
+    function testSyncSwap(){
+        var inputs = [
+        {
+          "components": [
+            {
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "pool",
+                  "type": "address"
+                },
+                {
+                  "internalType": "bytes",
+                  "name": "data",
+                  "type": "bytes"
+                },
+                {
+                  "internalType": "address",
+                  "name": "callback",
+                  "type": "address"
+                },
+                {
+                  "internalType": "bytes",
+                  "name": "callbackData",
+                  "type": "bytes"
+                }
+              ],
+              "internalType": "struct IRouter.SwapStep[]",
+              "name": "steps",
+              "type": "tuple[]"
+            },
+            {
+              "internalType": "address",
+              "name": "tokenIn",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amountIn",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IRouter.SwapPath[]",
+          "name": "paths",
+          "type": "tuple[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amountOutMin",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "deadline",
+          "type": "uint256"
+        }
+      ];
+
+      data = "0x2cc4081e000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000148c8e39da94be0000000000000000000000000000000000000000000000000000000064355e1800000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000006000000000000000000000000040dfbb6c1eedbbfdf04657b0cacbf8dc7b6ffbbb0000000000000000000000000000000000000000000000008ac7230489e800000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000011fbc92a086e0d2fe944cf08b0fb74d0d00d19cb000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000006000000000000000000000000040dfbb6c1eedbbfdf04657b0cacbf8dc7b6ffbbb00000000000000000000000042151759c3c51d99fe14f8a11749b6a4f0e0519200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000";
+
+      var a = web3.eth.abi.decodeParameters(inputs,data.substring(10));
+        console.log(JSON.stringify(a));
+        console.log(a);
+    }    
+
+    function testCors(){
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load" , function(e){
+            console.log(e);
+        });
+        oReq.open("POST", "",false);
+        oReq.setRequestHeader("Content-Type", "application/json");
+        oReq.send('{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}');
+    }
+    testCors();
+</script>
+
+</html>

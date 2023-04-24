@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "abi-decoder": "^2.4.0",
     "ethereumjs-tx": "^2.1.2",
     "http-server": "^13.0.2"
   },

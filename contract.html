@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>contract tools</title>
+    <link rel="stylesheet" href="./libs/bootstrap.min.css" />
+</head>
+<body>
+    <div id="app" class="container-fluid">
+        <div class="input-group" style="margin-top: 5px;">
+            <span class="input-group-addon">chain</span>
+            <input class="form-control" v-model="chainId" readonly />
+        </div>
+        <div class="input-group" style="margin-top: 5px;">
+            <span class="input-group-addon">account address</span>
+            <input class="form-control" v-model="accountAddress" readonly/>
+        </div>
+        <div class="input-group" style="margin-top: 5px;">
+            <span class="input-group-addon">contract address</span>
+            <input class="form-control" v-model="contractAddress" />
+        </div>
+        <div style="margin-top: 10px;">
+            <button :class="{'btn btn-primary': activeAbi.name == item.name,'btn btn-default': activeAbi.name != item.name}" v-on:click="switchAbi(item.name)" v-for="item in abis" style="margin-left: 5px;">{{item.name}}</button>
+            <button :class="{'btn btn-primary': activeAbi.name=='custom','btn btn-info': activeAbi.name!='custom'}" v-on:click="customAbi()" style="margin-left: 5px;">custom abi</button>
+        </div>
+
+
+        <!-- <ul class="nav nav-tabs">
+            <li v-for="item in abis" :class="{active: activeTab==item.name}"><a href="javascript:void(0)" v-on:click="switchAbi(item.name)">{{item.name}}</a></li>
+        </ul> -->
+        <h3>{{activeAbi.name}} functions</h2>
+        <hr />
+        <div class="panel panel-default" v-for="item in activeAbi.abi">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    {{item.name}}
+                </h3>
+            </div>
+            <div class="panel-body">
+                <div class="input-group" style="margin-top: 5px;" v-for="(p,index) in item.inputs">
+                    <span class="input-group-addon">{{p.name}}</span>
+                    <input class="form-control" :placeholder="p.type" :ref="item.name+'_'+index"/>
+                </div>
+                <button style="margin-top: 5px;" v-on:click="call(item)" :class="{'btn btn-default':item.stateMutability == 'view'||item.stateMutability == 'pure','btn btn-primary':!(item.stateMutability == 'view'||item.stateMutability == 'pure')}">
+                    {{item.stateMutability == 'view' || item.stateMutability == 'pure' ? 'read':'write'}}
+                </button>
+                <span style="margin-left: 10px;" :ref="item.name+'_result'"></span>
+                <!-- <textarea rows="2" class="form-control" placeholder="result" style="margin-top: 5px;"></textarea> -->
+            </div>
+        </div>   
+        <div style="display:none">
+            <input id="custom-abi-upload" type="file" v-on:change="customAbiChange()">
+        </div>
+    </div>
+</body>
+<script src="/libs/jquery-3.6.0.js"></script>
+<script src="/libs/bootstrap.min.js"></script>
+<script src="/libs/web3.min.js"></script>
+<script src="/libs/vue-2.6.14.js"></script>
+<script src="/libs/abis.js"></script>
+<script src="/abis/erc20.js"></script>
+<script src="/abis/erc721.js"></script>
+<script src="/abis/swap-router.js"></script>
+<script src="/abis/swap-factory.js"></script>
+<script src="/abis/swap-pair.js"></script>
+<!-- <script src='/libs/bignumber.min.js'></script> -->
+<!-- <script src="/libs/ethers.min.js"></script> -->
+
+<script type="text/javascript">
+
+    function getAbiFuncs(abi){
+        var result = [];
+        for(var i=0;i<abi.length;i++){
+            if(abi[i].type!="function"){
+                continue
+            }
+            result.push(abi[i]);
+        }
+
+        return result;
+    }
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            chainId:"",
+            accountAddress:"",
+            contractAddress:"",
+            abis:[
+                {
+                    name:"erc20",
+                    abi:getAbiFuncs(erc20Abi)
+                },
+                {
+                    name:"erc721",
+                    abi:getAbiFuncs(erc721Abi)
+                },
+                // {
+                //     name:"admin",
+                //     abi:getAbiFuncs(adminableAbi)
+                // },
+                // {
+                //     name:"cfo",
+                //     abi:getAbiFuncs(cfoableAbi)
+                // },
+                // {
+                //     name:"signer",
+                //     abi:getAbiFuncs(signerAbi)
+                // },
+                {
+                    name:"swapRouterV2",
+                    abi:getAbiFuncs(swapRouterAbi)
+                },
+                {
+                    name:"swapFactoryV2",
+                    abi:getAbiFuncs(swapFactoryAbi)
+                },
+                {
+                    name:"swapPairV2",
+                    abi:getAbiFuncs(swapPairAbi)
+                }
+            ],
+            activeAbi:{
+                name:"erc20",
+                abi:[]
+            }
+        },
+        methods:{
+            switchAbi:function(abiName){
+                for(var i=0;i<app.abis.length;i++){
+                    if(app.abis[i].name == abiName){
+                        app.activeAbi = app.abis[i];
+                        break;
+                    }
+                }
+            },
+            call:async function(item){
+                if(!this.contractAddress.trim()){
+                    alert("contract address err");
+                    return;
+                }
+                var args = [];
+                for(var i=0;i<item.inputs.length;i++){
+                    var v = $(this.$refs[item.name+"_"+i]).val();
+                    if(v==""){
+                        alert("args err");
+                        return
+                    }
+                    args.push(v);
+                }
+
+                var resDom = this.$refs[item.name+"_result"]
+                $(resDom).html("pending...");
+                
+                var web3 = new Web3(window.ethereum);
+                var contractInstance = new web3.eth.Contract(this.activeAbi.abi, this.contractAddress.trim(), {});
+                if(item.stateMutability == 'view'||item.stateMutability == 'pure'){
+                    contractInstance.methods[item.name](...args).call({},function(err,result){
+                        if(err){
+                            $(resDom).html(err.message);
+                        }else{
+                            $(resDom).html(result);
+                        }
+                    });
+                    // $(resDom).html(result.toString());
+                }else{
+                    contractInstance.methods[item.name](...args).send({
+                        from:this.accountAddress
+                    },function(err,result){
+                        if(err){
+                            $(resDom).html(err.message);
+                        }else{
+                            $(resDom).html(result);
+                        }
+                    });
+                }
+            },
+            customAbi:function(){
+                $("#custom-abi-upload").click();
+            },
+            customAbiChange:function(){
+                if(typeof FileReader == "undified") {
+                    alert("浏览器不支持读取文件内容");
+                }
+                if(document.getElementById("custom-abi-upload").files.length==0){
+                    return;
+                }
+                var resultFile = document.getElementById("custom-abi-upload").files[0];
+                if (resultFile) {
+                    var reader = new FileReader();   
+                    reader.onload = function (e) {
+                        try{
+                            var abiArr = JSON.parse(this.result)
+                            if(abiArr.abi || abiArr.output.abi){
+                                if(abiArr.abi){
+                                    abiArr = abiArr.abi;
+                                }else{
+                                    abiArr = abiArr.output.abi;
+                                }                                
+                            }
+                            app.activeAbi = {
+                                name:"custom-abi",
+                                abi:getAbiFuncs(abiArr)
+                            }
+                        }catch(e){
+                            alert(e.message);
+                        }
+                        
+                    };              
+                    reader.readAsText(resultFile,'UTF-8');
+                }
+            }
+        }
+        // mounted:function(){
+            
+        // }
+    });
+
+    app.switchAbi("erc20")
+
+    function initChain(){
+        window.ethereum.request({method:"eth_chainId"}).then(function(e){
+            e = parseInt(e).toString();
+            app.chainId=e;
+        },
+        function(err){
+            app.chainId="get chainid error,please refresh.";
+        });        
+    }
+    initChain();
+
+	async function getAccounts() {
+		return await window.ethereum.request({ method: "eth_accounts"});
+	}
+
+    async function enableAddress(){
+		window.ethereum.request({ method: 'eth_requestAccounts' }).then(async function(e){
+			// alert(window.ethereum.address);
+			var accounts = await getAccounts();
+			app.accountAddress = accounts[0];
+		},
+		function(err){
+			if(err!=null){
+				app.accountAddress=JSON.stringify(err);
+			}
+		});
+
+    }
+    enableAddress();
+
+	$('#conncet').on('click',function(){
+		enableAddress();
+	});
+	
+    window.ethereum.on('networkChanged', function (networkIDstring) {
+        app.chainId=networkIDstring;
+    });
+
+    window.ethereum.on('accountsChanged', function (accounts) {
+        app.accountAddress=accounts[0];
+    });
+
+</script>
+
+</html>
